@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加密貨幣基礎知識測驗</title>
+    <style>
+        :root { --primary-color: #f3ba2f; --error-color: #ff4d4d; --bg-color: #121213; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); color: #eaecef; padding: 20px; line-height: 1.6; }
+        .container { max-width: 600px; background: #1e2023; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); margin: auto; }
+        h2 { color: var(--primary-color); text-align: center; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        
+        .input-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 12px; background: #2b2f36; border: 1px solid #474d57; border-radius: 8px; color: white; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
+        input[type="text"]:focus { border-color: var(--primary-color); outline: none; }
+        
+        .error-msg { color: var(--error-color); font-size: 0.9em; margin-top: 5px; display: none; font-weight: bold; }
+        
+        .question { margin-bottom: 20px; background: #2b2f36; padding: 20px; border-radius: 8px; border-left: 4px solid var(--primary-color); }
+        .question p { margin-top: 0; font-size: 1.1em; }
+        .options label { display: block; cursor: pointer; padding: 10px; border-radius: 6px; transition: 0.2s; margin-bottom: 5px; }
+        .options label:hover { background: #3a3f47; }
+        .options input { margin-right: 12px; transform: scale(1.2); }
+        
+        #submitBtn { background-color: var(--primary-color); color: #000; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 18px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
+        #submitBtn:hover { background-color: #ffca42; }
+        #submitBtn:disabled { background-color: #474d57; color: #848e9c; cursor: not-allowed; }
+        
+        #status { display: none; text-align: center; margin-top: 15px; padding: 15px; border-radius: 8px; font-weight: bold; }
+        .loading { color: var(--primary-color); }
+        .success { background: rgba(76, 175, 80, 0.2); color: #4CAF50; border: 1px solid #4CAF50; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🪙 加密貨幣小測驗</h2>
+    
+    <div class="input-group">
+        <label for="memberId">請輸入會員編號 (限 6 碼)：</label>
+        <input type="text" id="memberId" placeholder="例如: 123456" oninput="validateInput()">
+        <div id="idError" class="error-msg">⚠️ 錯誤：編號超過 6 碼，無法提交表單！</div>
+    </div>
+
+    <form id="quizForm">
+        <div class="question">
+            <p>1. 根據影片，比特幣（Bitcoin）在幣圈常被稱為什麼？</p>
+            <div class="options">
+                <label><input type="radio" name="q1" value="A" required> A. 數位石油</label>
+                <label><input type="radio" name="q1" value="B"> B. 二哥</label>
+                <label><input type="radio" name="q1" value="C"> C. 大餅</label>
+                <label><input type="radio" name="q1" value="D"> D. 穩定幣</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <p>2. 關於以太幣（ETH）的敘述，下列何者正確？</p>
+            <div class="options">
+                <label><input type="radio" name="q2" value="A" required> A. 它支持「智慧合約」，像是一台自動販賣機</label>
+                <label><input type="radio" name="q2" value="B"> B. 它是市值排名第一的加密貨幣</label>
+                <label><input type="radio" name="q2" value="C"> C. 它屬於一種與美元 1:1 掛鉤的穩定幣</label>
+                <label><input type="radio" name="q2" value="D"> D. 它的總量上限固定為 2100 萬枚</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <p>3. 泰達幣（USDT）在加密貨幣市場中的主要角色是什麼？</p>
+            <div class="options">
+                <label><input type="radio" name="q3" value="A" required> A. 作為法幣與加密貨幣之間的橋樑</label>
+                <label><input type="radio" name="q3" value="B"> B. 是專門為了高效率應用而設計的公鏈</label>
+                <label><input type="radio" name="q3" value="C"> C. 主要用來進行跨境轉帳以取代 SWIFT 系統</label>
+                <label><input type="radio" name="q3" value="D"> D. 作為一種迷因幣，主要受社群情緒驅動</label>
+            </div>
+        </div>
+
+        <button type="submit" id="submitBtn">提交測驗並存檔</button>
+        <div id="status"></div>
+    </form>
+</div>
+
+<script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwn0aXQEDJ80U7ysmE7SYV5hPLr_47xIgVShvmvV55uJNh9ew-yz3XkCleyvp7B6e037g/exec";
+
+    // 即時檢查會員編號
+    function validateInput() {
+        const idInput = document.getElementById('memberId');
+        const errorMsg = document.getElementById('idError');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (idInput.value.length > 6) {
+            errorMsg.style.display = 'block';
+            submitBtn.disabled = true;
+        } else {
+            errorMsg.style.display = 'none';
+            submitBtn.disabled = false;
+        }
+    }
+
+    // 表單提交處理
+    document.getElementById('quizForm').onsubmit = function(e) {
+        e.preventDefault();
+        
+        const memberId = document.getElementById('memberId').value;
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('status');
+
+        if (memberId.length === 0) {
+            alert("請輸入會員編號");
+            return;
+        }
+
+        // 計算分數 (Q1:C, Q2:A, Q3:A)
+        const formData = new FormData(this);
+        let score = 0;
+        if (formData.get('q1') === 'C') score += 33;
+        if (formData.get('q2') === 'A') score += 33;
+        if (formData.get('q3') === 'A') score += 34;
+
+        // UI 狀態更新
+        submitBtn.disabled = true;
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'loading';
+        statusDiv.innerText = '⏳ 資料上傳中，請稍候...';
+
+        // 封裝資料
+        const params = new URLSearchParams({
+            memberId: memberId,
+            score: score,
+            q1: formData.get('q1'),
+            q2: formData.get('q2'),
+            q3: formData.get('q3')
+        });
+
+        // 發送資料到 Google Sheets
+        fetch(GAS_URL, {
+            method: "POST",
+            body: params,
+            mode: 'no-cors'
+        }).then(() => {
+            statusDiv.className = 'success';
+            statusDiv.innerHTML = `✅ 提交成功！<br>會員編號：${memberId}<br>得分：${score} 分`;
+            alert("測驗完成！資料已寫入 Excel 系統。");
+        }).catch(err => {
+            alert("上傳失敗，請稍後再試");
+            submitBtn.disabled = false;
+            statusDiv.style.display = 'none';
+        });
+    };
+</script>
+
+</body>
+</html>
