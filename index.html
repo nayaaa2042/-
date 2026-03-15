@@ -5,34 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web3 交易員培訓測驗系統</title>
     <style>
-        :root { --primary: #f3ba2f; --bg: #121213; --card: #1e2023; --success: #4CAF50; --error: #ff4d4d; }
+        :root { --primary: #f3ba2f; --bg: #121213; --card: #1e2023; --success: #4CAF50; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); color: #fff; padding: 20px; line-height: 1.6; }
         .container { max-width: 600px; margin: auto; background: var(--card); padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
         .hidden { display: none; }
-        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+        h2 { text-align: center; color: var(--primary); }
         
         /* 登入樣式 */
-        .login-box { text-align: center; }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; background: #2b2f36; color: #fff; border: 1px solid #444; box-sizing: border-box; font-size: 16px; }
-        button { background: var(--primary); color: #000; width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 10px; transition: 0.3s; }
-        button:hover { background: #ffca42; }
+        button { background: var(--primary); color: #000; width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 10px; }
         button:disabled { background: #474d57; color: #848e9c; cursor: not-allowed; }
         
         /* 地圖卡片樣式 */
         .quiz-card { background: #2b2f36; margin: 12px 0; padding: 20px; border-radius: 10px; border-left: 6px solid #444; transition: 0.3s; position: relative; }
         .quiz-card.open { border-left-color: var(--primary); cursor: pointer; }
-        .quiz-card.open:hover { transform: translateX(5px); background: #3a3f47; }
+        .quiz-card.open:hover { background: #3a3f47; transform: translateX(5px); }
         .quiz-card.done { border-left-color: var(--success); opacity: 0.8; cursor: default; }
         .status-tag { float: right; font-size: 14px; font-weight: bold; }
 
         /* 測驗樣式 */
-        .q-box { background: #2b2f36; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #444; }
-        .options label { display: block; padding: 12px; background: rgba(255,255,255,0.05); margin: 8px 0; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .q-box { background: #2b2f36; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .options label { display: block; padding: 12px; background: rgba(255,255,255,0.05); margin: 5px 0; border-radius: 5px; cursor: pointer; }
         .options label:hover { background: rgba(255,255,255,0.1); }
-        .options input { margin-right: 10px; transform: scale(1.2); }
         
-        .grad-screen { text-align: center; padding: 40px 20px; border: 2px solid var(--primary); border-radius: 20px; margin-top: 20px; background: rgba(243, 186, 47, 0.05); }
-        .loading { text-align: center; color: var(--primary); padding: 20px; }
+        .grad-screen { text-align: center; padding: 40px 0; border: 2px solid var(--primary); border-radius: 20px; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -40,38 +36,33 @@
 <div class="container">
     <div id="loginPage">
         <h2>🔑 學員登入 / 註冊</h2>
-        <div class="login-box">
-            <p style="color:#888; font-size: 14px;">輸入 6 碼會員編號與自訂 6 碼密碼</p>
-            <input type="text" id="uid" placeholder="會員編號 (6位數)" maxlength="6">
-            <input type="password" id="pwd" placeholder="自訂密碼 (6位數)" maxlength="6">
-            <button id="loginBtn" onclick="handleLogin()">進入學習系統</button>
-        </div>
+        <input type="text" id="uid" placeholder="會員編號 (6位數)" maxlength="6">
+        <input type="password" id="pwd" placeholder="自訂密碼 (6位數)" maxlength="6">
+        <button id="loginBtn" onclick="handleLogin()">進入系統</button>
     </div>
 
     <div id="mapPage" class="hidden">
         <h2>🎯 學習地圖進度</h2>
-        <div id="quizList" class="loading">📡 同步雲端資料中...</div>
+        <div id="quizList">正在連線至雲端試算表...</div>
         <div id="gradMessage" class="hidden grad-screen">
             <h1 style="color:var(--primary)">🎓 恭喜畢業！</h1>
-            <p>您已成功挑戰所有 Web3 交易員培訓測驗</p>
-            <button onclick="location.reload()" style="width:auto; padding: 10px 30px; background:#444; color:#fff;">登出系統</button>
+            <p>您已完成所有 6 個階段的測驗</p>
+            <button onclick="location.reload()" style="width:auto; padding: 10px 30px;">登出系統</button>
         </div>
     </div>
 
     <div id="quizPage" class="hidden">
-        <h2 id="quizTitle">載入中...</h2>
+        <h2 id="quizTitle"></h2>
         <div id="qContent"></div>
-        <button id="subBtn" onclick="submitQuiz()">提交並儲存結果</button>
-        <button onclick="showPage('mapPage')" style="background:transparent; color:#888; font-size: 14px; margin-top: 15px;">返回地圖</button>
+        <button id="subBtn" onclick="submitQuiz()">提交測驗並存檔</button>
     </div>
 </div>
 
 <script>
-    // 已更新為你的 API 網址
-    const API_URL = "https://script.google.com/macros/s/AKfycbznEqMJPp5rFQA5iENyY1-j9N2wjNiOfJroRy81tK6YfySRZS4CiCgIKQZ9X60IBTZv7A/exec"; 
+    // 已自動替換為你最新的 API 網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbwqB4JYloO-fpkxqBD2GlLhvCwkSsvnuScQMNEiuklMOAsyic4EBBD6P_d3RS3miNYrPg/exec"; 
     let currentUser = "", currentQuizId = "", allData = {};
 
-    // 登入邏輯
     async function handleLogin() {
         const uid = document.getElementById('uid').value;
         const pwd = document.getElementById('pwd').value;
@@ -79,31 +70,21 @@
         if(uid.length < 6 || pwd.length < 6) return alert("編號與密碼皆需為 6 碼");
         
         btn.disabled = true;
-        btn.innerText = "驗證身分中...";
+        btn.innerText = "驗證中...";
         
+        const params = new URLSearchParams({ action: 'login', uid: uid, pwd: pwd });
         try {
-            // POST 登入請求
-            await fetch(API_URL, { 
-                method: 'POST', 
-                body: new URLSearchParams({ action: 'login', uid: uid, pwd: pwd }), 
-                mode: 'no-cors' 
-            });
-            // 因為 no-cors 無法抓回傳值，我們假設輸入即正確（簡化流程）
+            await fetch(API_URL, { method: 'POST', body: params, mode: 'no-cors' });
             currentUser = uid;
             showPage('mapPage');
             loadProgress();
         } catch (e) {
-            alert("系統連線異常，請稍後再試");
+            alert("登入連線失敗");
             btn.disabled = false;
-            btn.innerText = "進入學習系統";
         }
     }
 
-    // 載入題目狀態與進度
     async function loadProgress() {
-        const listDiv = document.getElementById('quizList');
-        listDiv.innerHTML = "📡 同步雲端資料中...";
-        
         try {
             const [qRes, pRes] = await Promise.all([
                 fetch(`${API_URL}?action=getQuiz`),
@@ -112,7 +93,8 @@
             allData = await qRes.json();
             const doneList = await pRes.json();
             
-            listDiv.innerHTML = "";
+            const list = document.getElementById('quizList');
+            list.innerHTML = "";
             let doneCount = 0;
 
             for(let i=1; i<=6; i++) {
@@ -122,30 +104,26 @@
 
                 const div = document.createElement('div');
                 div.className = `quiz-card ${isOpen ? 'open' : ''} ${isDone ? 'done' : ''}`;
-                
                 let statusText = isDone ? "✅ 已完成" : (isOpen ? "👉 點擊開始" : "🔒 尚未開放");
                 div.innerHTML = `<span class="status-tag">${statusText}</span><b>階段 ${i} 測驗</b>`;
                 
                 if(isOpen && !isDone) div.onclick = () => startQuiz(i);
-                listDiv.appendChild(div);
+                list.appendChild(div);
             }
 
             if(doneCount === 6) document.getElementById('gradMessage').classList.remove('hidden');
         } catch (e) {
-            listDiv.innerHTML = "❌ 資料載入失敗，請確認試算表分頁名稱。";
+            document.getElementById('quizList').innerText = "❌ 資料載入失敗，請確認試算表 Questions 分頁內容與 I 欄是否填寫『開放』。";
         }
     }
 
-    // 顯示測驗題目
     function startQuiz(id) {
         currentQuizId = id;
         const questions = allData.quizzes[id];
-        if(!questions) return alert("該測驗尚未準備好題目資料");
-
         document.getElementById('quizTitle').innerText = `階段 ${id} 測驗`;
         document.getElementById('qContent').innerHTML = questions.map((q, i) => `
             <div class="q-box">
-                <p><b>Q${q.qNum}. ${q.title}</b></p>
+                <p><b>Q${i+1}. ${q.title}</b></p>
                 <div class="options">
                     ${q.options.map((opt, j) => `
                         <label><input type="radio" name="q${i}" value="${String.fromCharCode(65+j)}" required> ${String.fromCharCode(65+j)}. ${opt}</label>
@@ -157,7 +135,6 @@
         window.scrollTo(0,0);
     }
 
-    // 提交測驗
     async function submitQuiz() {
         const questions = allData.quizzes[currentQuizId];
         let correct = 0;
@@ -165,36 +142,24 @@
 
         for(let i=0; i < questions.length; i++) {
             const sel = document.querySelector(`input[name="q${i}"]:checked`);
-            if(!sel) return alert("請完成所有題目後再提交！");
+            if(!sel) return alert("請完成所有題目！");
             if(sel.value === questions[i].answer) correct++;
-            userAnswers[`Q${questions[i].qNum}`] = sel.value;
+            userAnswers[`Q${i+1}`] = sel.value;
         }
 
         const score = Math.round((correct / questions.length) * 100);
         const subBtn = document.getElementById('subBtn');
         subBtn.disabled = true;
-        subBtn.innerText = "💾 正在儲存結果...";
+        subBtn.innerText = "正在存檔...";
 
-        try {
-            await fetch(API_URL, { 
-                method: 'POST', 
-                body: new URLSearchParams({
-                    action: 'submit',
-                    uid: currentUser,
-                    quizId: currentQuizId,
-                    score: score,
-                    answers: JSON.stringify(userAnswers)
-                }), 
-                mode: 'no-cors' 
-            });
-            alert(`測驗提交成功！您的得分：${score} 分`);
-            showPage('mapPage');
-            loadProgress();
-        } catch (e) {
-            alert("提交失敗，請檢查網路狀態");
-            subBtn.disabled = false;
-            subBtn.innerText = "提交並儲存結果";
-        }
+        const params = new URLSearchParams({
+            action: 'submit', uid: currentUser, quizId: currentQuizId, score: score, answers: JSON.stringify(userAnswers)
+        });
+
+        await fetch(API_URL, { method: 'POST', body: params, mode: 'no-cors' });
+        alert(`提交成功！得分：${score}`);
+        showPage('mapPage');
+        loadProgress();
     }
 
     function showPage(id) {
