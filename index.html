@@ -7,10 +7,12 @@
     .app { width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
     .card { background: var(--card); padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; text-align: center; }
     h2 { color: var(--gold); margin-top: 0; font-size: 1.6rem; }
-    input { width: 100%; padding: 15px; margin: 12px 0; border-radius: 12px; border: 1px solid #444; background: #252525; color: white; text-align: center; font-size: 1.1rem; }
+    input { width: 100%; padding: 15px; margin: 12px 0; border-radius: 12px; border: 1px solid #444; background: #252525; color: white; text-align: center; font-size: 1.1rem; letter-spacing: 2px; }
+    input:focus { border-color: var(--gold); outline: none; }
     .btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 15px; font-size: 1.2rem; }
     .btn-gold { background: var(--gold); color: black; }
-    .map-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: #252525; margin-bottom: 12px; border-radius: 12px; border-left: 6px solid var(--gold); }
+    .btn-gold:active { transform: scale(0.98); }
+    .map-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #252525; margin-bottom: 15px; border-radius: 12px; border-left: 6px solid var(--gold); }
     .map-item.finished { border-left-color: var(--green); background: #1a251e; }
     .hidden { display: none; }
     .option { background: #333; padding: 15px; margin: 10px 0; border-radius: 8px; cursor: pointer; text-align: left; border: 1px solid transparent; }
@@ -24,22 +26,23 @@
 
 <div class="app">
   <div id="v-auth" class="card">
-    <h2>學員驗證登入</h2>
+    <h2 style="margin-bottom: 10px;">學員驗證登入</h2>
     <p style="color: #888; font-size: 0.85rem;">首次進入請自訂 6 碼密碼完成註冊</p>
-    <input type="text" id="uid" placeholder="會員編號 (6碼)" maxlength="6">
+    <input type="text" id="uid" placeholder="會員編號 (6碼)" maxlength="6" inputmode="numeric">
     <input type="password" id="upw" placeholder="密碼 (6碼)" maxlength="6">
     <button class="btn btn-gold" onclick="doAuth()">進入學習地圖</button>
   </div>
 
   <div id="v-map" class="hidden">
-    <h2>🎯 學習進度地圖</h2>
+    <h2 style="margin-bottom: 30px;">🎯 學習進度地圖</h2>
     <div id="map-list"></div>
-    <div id="v-grad" class="card hidden" style="border: 2px dashed var(--gold); margin-top:20px;">
-        <h2 style="font-size: 1.8rem;">🎉 恭喜畢業</h2>
-        <p id="grad-info" style="font-weight: bold; color: var(--gold); font-size: 1.3rem;"></p>
-        <p>您已完成所有測驗，請截圖上傳社群！</p>
+    <div id="v-grad" class="card hidden" style="border: 2px dashed var(--gold); margin-top:20px; background: rgba(255,184,0,0.05);">
+        <h2 style="font-size: 2rem;">🎉 恭喜畢業</h2>
+        <p id="grad-info" style="font-weight: bold; color: var(--gold); font-size: 1.4rem;"></p>
+        <p>您已完成新手班所有測驗！</p>
+        <p style="background: var(--gold); color: black; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;">請截圖此畫面並上傳社群領獎</p>
     </div>
-    <button class="btn" style="background:none; border:1px solid #444; color:#666;" onclick="location.reload()">登出系統</button>
+    <button class="btn" style="background:none; border:1px solid #444; color:#666;" onclick="location.reload()">登出帳號</button>
   </div>
 
   <div id="v-quiz" class="hidden">
@@ -50,14 +53,14 @@
 
   <div id="v-res" class="hidden">
     <h2 id="r-title"></h2>
-    <div id="r-body" class="card" style="text-align: left; line-height: 1.6;"></div>
+    <div id="r-body" class="card" style="text-align: left; line-height: 1.8;"></div>
     <button class="btn btn-gold" onclick="loadMap()">返回地圖</button>
   </div>
 </div>
 
 <script>
-  // 已更新為最新網址
-  const API_URL = "https://script.google.com/macros/s/AKfycbxD_KfAEWjWn1EKTA7j3AvYJJsTh0lmI1LXdKdh-XpW_S_b_oRSRe7_ZCJjco1jhQjhHw/exec";
+  // 已連結你提供的新網址
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbxqIEPKmStCFQHgBPYGE2Hbmyj-t4GPLanfMY1GLKHRDcxlu7JmUcpvC1t_P8A5xibDtQ/exec";
   let user = { id: "", pw: "" };
   let qs = [];
   let ans = [];
@@ -65,12 +68,15 @@
 
   function toggleL(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
 
+  // 核心呼叫函式：確保與 GAS 穩定對接
   function callGAS(data, cb) {
     toggleL(true);
-    // 使用 google.script.run 呼叫後端 handleAction 函式
     google.script.run
       .withSuccessHandler((res) => { toggleL(false); cb(res); })
-      .withFailureHandler((err) => { toggleL(false); alert("系統連線異常，請確認 GAS 權限設定或網路連線。\n錯誤訊息：" + err); })
+      .withFailureHandler((err) => { 
+        toggleL(false); 
+        alert("系統連線異常，請確認 GAS 權限設定。\n錯誤內容：" + err); 
+      })
       .handleAction(data);
   }
 
@@ -93,8 +99,8 @@
         const item = document.createElement('div');
         item.className = `map-item ${m.isFinished ? 'finished' : ''}`;
         item.innerHTML = `
-          <div style="font-weight:bold;">${m.name}</div>
-          <button class="btn" style="width:auto; padding:8px 15px; margin:0; font-size:0.8rem; background:${m.isFinished ? '#00c853' : '#ffb800'}" 
+          <div style="font-weight:bold; font-size:1.1rem;">${m.name}</div>
+          <button class="btn" style="width:auto; padding:8px 15px; margin:0; font-size:0.85rem; background:${m.isFinished ? '#00c853' : '#ffb800'}" 
             onclick="${m.isFinished ? `showR('${m.name}', '${m.score}', '${m.detail}')` : `goQ('${m.name}')`}">
             ${m.isFinished ? '檢視結果' : '開始作答'}
           </button>
@@ -111,6 +117,7 @@
   function goQ(stg) {
     curStage = stg;
     callGAS({ action: "getQuestions", stage: stg, userId: user.id, password: user.pw }, (res) => {
+      if(res.status === "error") return alert(res.message);
       show('v-quiz');
       document.getElementById('q-title').innerText = stg;
       qs = res.questions;
@@ -142,19 +149,27 @@
     let s = 0, l = "";
     qs.forEach((q, i) => {
       const ok = ans[i] === q.answer;
-      if(ok) s += (100 / qs.length);
-      l += `Q${i+1}:${ans[i]}(${ok?'對':'錯'}) `;
+      if(ok) s += Math.round(100 / qs.length);
+      l += `Q${i+1}:${ans[i]}(${ok?'對':'錯'}) | `;
     });
-    callGAS({ action: "submitQuiz", stage: curStage, score: Math.round(s), detail: l, userId: user.id, password: user.pw }, () => {
-      alert("提交成功！紀錄已同步至雲端。");
-      loadMap();
+    callGAS({ action: "submitQuiz", stage: curStage, score: s, detail: l, userId: user.id, password: user.pw }, (res) => {
+      if(res.status === "success") {
+        alert("提交成功！紀錄已同步至雲端。");
+        loadMap();
+      } else {
+        alert(res.message);
+      }
     });
   }
 
   function showR(stg, sc, dt) {
     show('v-res');
-    document.getElementById('r-title').innerText = stg + " 測驗復盤";
-    document.getElementById('r-body').innerHTML = `<p style="text-align:center; color:var(--green); font-size:1.5rem;">得分：${sc}</p><p><b>紀錄：</b></p><div style="background:#111; padding:15px; border-radius:10px;">${dt}</div>`;
+    document.getElementById('r-title').innerText = stg + " 復盤檢視";
+    document.getElementById('r-body').innerHTML = `
+      <div style="text-align:center; color:var(--green); font-size:1.6rem; font-weight:bold; margin-bottom:15px;">得分：${sc}</div>
+      <p><b>詳細紀錄：</b></p>
+      <div style="background:#111; padding:15px; border-radius:10px; font-family:monospace; font-size:0.9rem;">${dt.replace(/\|/g, '<br>')}</div>
+    `;
   }
 
   function show(id) {
