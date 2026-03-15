@@ -6,170 +6,161 @@
     body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Arial, sans-serif; margin: 0; display: flex; justify-content: center; }
     .app { width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
     .card { background: var(--card); padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; text-align: center; }
-    h2 { color: var(--gold); margin-top: 0; }
-    input { width: 100%; padding: 15px; margin: 12px 0; border-radius: 12px; border: 1px solid #444; background: #252525; color: white; text-align: center; font-size: 1.2rem; }
+    h2 { color: var(--gold); margin-top: 0; font-size: 1.6rem; }
+    input { width: 100%; padding: 15px; margin: 12px 0; border-radius: 12px; border: 1px solid #444; background: #252525; color: white; text-align: center; font-size: 1.1rem; }
     .btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 15px; font-size: 1.2rem; }
     .btn-gold { background: var(--gold); color: black; }
-    .map-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #252525; margin-bottom: 15px; border-radius: 12px; border-left: 6px solid var(--gold); }
+    .map-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: #252525; margin-bottom: 12px; border-radius: 12px; border-left: 6px solid var(--gold); }
     .map-item.finished { border-left-color: var(--green); background: #1a251e; }
     .hidden { display: none; }
-    .option { background: #333; padding: 15px; margin: 10px 0; border-radius: 8px; cursor: pointer; border: 1px solid transparent; text-align: left; transition: 0.2s; }
+    .option { background: #333; padding: 15px; margin: 10px 0; border-radius: 8px; cursor: pointer; text-align: left; border: 1px solid transparent; }
     .option.selected { background: var(--gold); color: black; font-weight: bold; }
-    
-    /* 載入遮罩 */
-    #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; color: var(--gold); font-size: 1.5rem; }
+    #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 9999; color: var(--gold); font-weight: bold; }
   </style>
 </head>
 <body>
 
-<div id="loader">⌛ 連線雲端中...</div>
+<div id="loader">⌛ 正在連線雲端中...</div>
 
 <div class="app">
-  <div id="view-auth" class="card">
+  <div id="v-auth" class="card">
     <h2>學員驗證登入</h2>
-    <p style="color: #888;">首次進入請自訂 6 碼密碼完成註冊</p>
+    <p style="color: #888; font-size: 0.85rem;">首次進入請自訂 6 碼密碼完成註冊</p>
     <input type="text" id="uid" placeholder="會員編號 (6碼)" maxlength="6">
-    <input type="password" id="upw" placeholder="登入密碼 (6碼)" maxlength="6">
+    <input type="password" id="upw" placeholder="密碼 (6碼)" maxlength="6">
     <button class="btn btn-gold" onclick="doAuth()">進入學習地圖</button>
-    <p id="auth-msg" style="color: #ff4444; margin-top: 15px;"></p>
   </div>
 
-  <div id="view-map" class="hidden">
-    <h2 style="margin-bottom: 30px;">🎯 學習進度地圖</h2>
+  <div id="v-map" class="hidden">
+    <h2>🎯 學習進度地圖</h2>
     <div id="map-list"></div>
-    <div id="view-grad" class="card hidden" style="border: 3px dashed var(--gold);">
-        <h2 style="font-size: 2rem;">🎉 恭喜畢業</h2>
-        <p id="grad-info" style="font-size: 1.5rem; font-weight: bold; color: var(--gold);"></p>
-        <p>請截圖本畫面回傳社群記事本！</p>
+    <div id="v-grad" class="card hidden" style="border: 2px dashed var(--gold); margin-top:20px;">
+        <h2 style="font-size: 1.8rem;">🎉 恭喜畢業</h2>
+        <p id="grad-info" style="font-weight: bold; color: var(--gold); font-size: 1.3rem;"></p>
+        <p>您已完成所有測驗，請截圖上傳社群！</p>
     </div>
-    <button class="btn" style="background:none; border:1px solid #444; color:#666;" onclick="location.reload()">切換帳號</button>
+    <button class="btn" style="background:none; border:1px solid #444; color:#666;" onclick="location.reload()">登出系統</button>
   </div>
 
-  <div id="view-quiz" class="hidden">
-    <h2 id="quiz-title"></h2>
-    <div id="quiz-content" class="card"></div>
-    <button id="submit-btn" class="btn btn-gold hidden" onclick="submit()">確認提交測驗</button>
+  <div id="v-quiz" class="hidden">
+    <h2 id="q-title"></h2>
+    <div id="q-content" class="card"></div>
+    <button id="sub-btn" class="btn btn-gold hidden" onclick="doSubmit()">提交測驗</button>
   </div>
 
-  <div id="view-res" class="hidden">
-    <h2 id="res-title"></h2>
-    <div id="res-body" class="card" style="line-height: 1.8; text-align: left;"></div>
-    <button class="btn btn-gold" onclick="loadMapData()">返回地圖</button>
+  <div id="v-res" class="hidden">
+    <h2 id="r-title"></h2>
+    <div id="r-body" class="card" style="text-align: left; line-height: 1.6;"></div>
+    <button class="btn btn-gold" onclick="loadMap()">返回地圖</button>
   </div>
 </div>
 
 <script>
+  // 已更新為最新網址
+  const API_URL = "https://script.google.com/macros/s/AKfycbxD_KfAEWjWn1EKTA7j3AvYJJsTh0lmI1LXdKdh-XpW_S_b_oRSRe7_ZCJjco1jhQjhHw/exec";
   let user = { id: "", pw: "" };
-  let questions = [];
-  let answers = [];
-  let currentStage = "";
+  let qs = [];
+  let ans = [];
+  let curStage = "";
 
-  function toggleLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+  function toggleL(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
 
   function callGAS(data, cb) {
-    toggleLoader(true);
-    google.script.run.withSuccessHandler((res) => {
-      toggleLoader(false);
-      cb(res);
-    }).handleAction(data);
+    toggleL(true);
+    // 使用 google.script.run 呼叫後端 handleAction 函式
+    google.script.run
+      .withSuccessHandler((res) => { toggleL(false); cb(res); })
+      .withFailureHandler((err) => { toggleL(false); alert("系統連線異常，請確認 GAS 權限設定或網路連線。\n錯誤訊息：" + err); })
+      .handleAction(data);
   }
 
   function doAuth() {
-    user.id = document.getElementById('uid').value;
-    user.pw = document.getElementById('upw').value;
-    if (user.id.length !== 6 || user.pw.length !== 6) return alert("請輸入 6 碼編號與密碼");
-    loadMapData();
+    user.id = document.getElementById('uid').value.trim();
+    user.pw = document.getElementById('upw').value.trim();
+    if (user.id.length !== 6 || user.pw.length !== 6) return alert("編號與密碼必須皆為 6 碼");
+    loadMap();
   }
 
-  function loadMapData() {
+  function loadMap() {
     callGAS({ action: "getMap", userId: user.id, password: user.pw }, (res) => {
       if(res.status === "error") return alert(res.message);
-      show('view-map');
-      renderMap(res);
+      show('v-map');
+      const list = document.getElementById('map-list');
+      list.innerHTML = "";
+      let d = 0;
+      res.map.forEach(m => {
+        if(m.isFinished) d++;
+        const item = document.createElement('div');
+        item.className = `map-item ${m.isFinished ? 'finished' : ''}`;
+        item.innerHTML = `
+          <div style="font-weight:bold;">${m.name}</div>
+          <button class="btn" style="width:auto; padding:8px 15px; margin:0; font-size:0.8rem; background:${m.isFinished ? '#00c853' : '#ffb800'}" 
+            onclick="${m.isFinished ? `showR('${m.name}', '${m.score}', '${m.detail}')` : `goQ('${m.name}')`}">
+            ${m.isFinished ? '檢視結果' : '開始作答'}
+          </button>
+        `;
+        list.appendChild(item);
+      });
+      if(d === 6) {
+        document.getElementById('v-grad').classList.remove('hidden');
+        document.getElementById('grad-info').innerText = `學員：${res.userId} 畢業`;
+      }
     });
   }
 
-  function renderMap(res) {
-    const list = document.getElementById('map-list');
-    list.innerHTML = "";
-    let done = 0;
-    res.map.forEach(m => {
-      if(m.isFinished) done++;
-      const item = document.createElement('div');
-      item.className = `map-item ${m.isFinished ? 'finished' : ''}`;
-      item.innerHTML = `
-        <div style="font-weight:bold; font-size:1.1rem;">${m.name}</div>
-        <button class="btn" style="width:auto; padding:8px 15px; margin:0; font-size:0.8rem; background:${m.isFinished ? '#00c853' : '#ffb800'}" 
-          onclick="${m.isFinished ? `showReview('${m.name}', '${m.score}', '${m.detail}')` : `goQuiz('${m.name}')`}">
-          ${m.isFinished ? '檢視結果' : '開始作答'}
-        </button>
-      `;
-      list.appendChild(item);
-    });
-    if(done === 6) {
-      document.getElementById('view-grad').classList.remove('hidden');
-      document.getElementById('grad-info').innerText = `學員：${res.userId} 畢業`;
-    }
-  }
-
-  function goQuiz(stage) {
-    currentStage = stage;
-    callGAS({ action: "getQuestions", stage: stage, userId: user.id, password: user.pw }, (res) => {
-      show('view-quiz');
-      document.getElementById('quiz-title').innerText = stage;
-      questions = res.questions;
-      answers = new Array(questions.length).fill(null);
-      const content = document.getElementById('quiz-content');
-      content.innerHTML = "";
-      
-      questions.forEach((q, qIdx) => {
-        const div = document.createElement('div');
-        div.innerHTML = `<p style="margin-top:20px;"><b>Q${qIdx+1}. ${q.question}</b></p>`;
-        q.options.forEach((opt, oIdx) => {
-          const char = String.fromCharCode(65 + oIdx);
-          const oDiv = document.createElement('div');
-          oDiv.className = `option o-grp-${qIdx}`;
-          oDiv.innerText = `${char}. ${opt}`;
-          oDiv.onclick = () => {
-            answers[qIdx] = char;
-            document.querySelectorAll(`.o-grp-${qIdx}`).forEach(el => el.classList.remove('selected'));
-            oDiv.classList.add('selected');
-            if(!answers.includes(null)) document.getElementById('submit-btn').classList.remove('hidden');
+  function goQ(stg) {
+    curStage = stg;
+    callGAS({ action: "getQuestions", stage: stg, userId: user.id, password: user.pw }, (res) => {
+      show('v-quiz');
+      document.getElementById('q-title').innerText = stg;
+      qs = res.questions;
+      ans = new Array(qs.length).fill(null);
+      const cont = document.getElementById('q-content');
+      cont.innerHTML = "";
+      qs.forEach((q, i) => {
+        const d = document.createElement('div');
+        d.innerHTML = `<p style="margin-top:20px;"><b>Q${i+1}. ${q.question}</b></p>`;
+        q.options.forEach((o, j) => {
+          const c = String.fromCharCode(65 + j);
+          const oD = document.createElement('div');
+          oD.className = `option o-g-${i}`;
+          oD.innerText = `${c}. ${o}`;
+          oD.onclick = () => {
+            ans[i] = c;
+            document.querySelectorAll(`.o-g-${i}`).forEach(el => el.classList.remove('selected'));
+            oD.classList.add('selected');
+            if(!ans.includes(null)) document.getElementById('sub-btn').classList.remove('hidden');
           };
-          div.appendChild(oDiv);
+          d.appendChild(oD);
         });
-        content.appendChild(div);
+        cont.appendChild(d);
       });
     });
   }
 
-  function submit() {
-    let score = 0, log = "";
-    questions.forEach((q, i) => {
-      const ok = answers[i] === q.answer;
-      if(ok) score += (100 / questions.length);
-      log += `Q${i+1}:${answers[i]}(${ok?'對':'錯'}) `;
+  function doSubmit() {
+    let s = 0, l = "";
+    qs.forEach((q, i) => {
+      const ok = ans[i] === q.answer;
+      if(ok) s += (100 / qs.length);
+      l += `Q${i+1}:${ans[i]}(${ok?'對':'錯'}) `;
     });
-    callGAS({ action: "submitQuiz", stage: currentStage, score: Math.round(score), detail: log, userId: user.id, password: user.pw }, () => {
-      alert("提交成功！");
-      loadMapData();
+    callGAS({ action: "submitQuiz", stage: curStage, score: Math.round(s), detail: l, userId: user.id, password: user.pw }, () => {
+      alert("提交成功！紀錄已同步至雲端。");
+      loadMap();
     });
   }
 
-  function showReview(stg, sc, dt) {
-    show('view-res');
-    document.getElementById('res-title').innerText = stg + " 復盤";
-    document.getElementById('res-body').innerHTML = `
-      <div style="text-align:center; font-size:1.5rem; color:var(--green); font-weight:bold;">得分：${sc}</div>
-      <p><b>詳細作答紀錄：</b></p>
-      <div style="background:#111; padding:15px; border-radius:10px;">${dt}</div>
-    `;
+  function showR(stg, sc, dt) {
+    show('v-res');
+    document.getElementById('r-title').innerText = stg + " 測驗復盤";
+    document.getElementById('r-body').innerHTML = `<p style="text-align:center; color:var(--green); font-size:1.5rem;">得分：${sc}</p><p><b>紀錄：</b></p><div style="background:#111; padding:15px; border-radius:10px;">${dt}</div>`;
   }
 
   function show(id) {
-    ['view-auth', 'view-map', 'view-quiz', 'view-res'].forEach(v => document.getElementById(v).classList.add('hidden'));
+    ['v-auth', 'v-map', 'v-quiz', 'v-res'].forEach(v => document.getElementById(v).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
-    window.scrollTo(0, 0);
+    window.scrollTo(0,0);
   }
 </script>
 </body>
