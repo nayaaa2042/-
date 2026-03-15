@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>教育測驗系統</title>
+    <title>測驗系統 - 學習地圖</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #121212; color: #e0e0e0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 500px; }
@@ -14,7 +14,7 @@
         }
         .quiz-card.done { border-left-color: #00c853; }
         .info h3 { margin: 0 0 5px 0; color: #ffcc00; }
-        .score-text { font-size: 0.9rem; color: #00c853; font-weight: bold; }
+        .score-display { font-size: 0.9rem; color: #00c853; font-weight: bold; margin-top: 5px; }
         .btn { 
             padding: 10px 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;
         }
@@ -23,40 +23,43 @@
         .btn-review { background: #333; color: #00c853; border: 1px solid #00c853; }
         .btn-review:hover { background: #00c853; color: white; }
         
-        /* 復盤彈窗 */
-        #modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#252525; padding:20px; border-radius:10px; width:85%; max-width:400px; box-shadow:0 0 20px black; z-index:100; }
-        #overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99; }
+        /* 復盤彈窗樣式 */
+        #modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#252525; padding:25px; border-radius:12px; width:85%; max-width:400px; box-shadow:0 0 30px rgba(0,0,0,0.7); z-index:100; border: 1px solid #444; }
+        #overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99; }
+        #modal-content { margin: 15px 0; line-height: 1.6; color: #ddd; white-space: pre-wrap; font-size: 0.95rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align: center;">學習進度與測驗</h2>
-    <div id="quiz-list">載入資料中，請稍候...</div>
+    <h2 style="text-align: center; color: #ffcc00;">學習進度地圖</h2>
+    <div id="quiz-list">載入中...</div>
 </div>
 
 <div id="overlay" onclick="closeModal()"></div>
 <div id="modal">
-    <h3 style="color:#ffcc00">測驗復盤解析</h3>
-    <div id="modal-content" style="margin: 15px 0; line-height: 1.6; color: #ccc; white-space: pre-wrap;"></div>
-    <button class="btn btn-start" style="width:100%" onclick="closeModal()">關閉</button>
+    <h3 style="color:#ffcc00; margin-top:0;">測驗復盤解析</h3>
+    <div id="modal-content"></div>
+    <button class="btn btn-start" style="width:100%" onclick="closeModal()">關閉視窗</button>
 </div>
 
 <script>
-    // 已更新為你提供的最新網址
-    const API_URL = "https://script.google.com/macros/s/AKfycbwgL3eyngW7tPJzvevgbzokraAFmGCi2XUDZOwMmN8kZPFXqilQbpRnrorvOame5E250g/exec";
-    const USER_ID = "MEMBER_001"; // 可對應試算表中的「會員編號」
+    // 已更新為你提供的最新 GAS 網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbwburYq62Iw-XVZChk9J52gU3u5muJ6Fmx4ygHbB0KyhJRT3xrUC5-ckuKlKQ7tPS39cg/exec";
+    
+    // 這裡可以改成從你的登入系統抓取真實的會員編號
+    const USER_ID = "MEMBER_001"; 
 
-    // 載入題目列表與作答狀態
+    // 1. 頁面載入時：抓取題目與作答狀態
     async function loadQuizzes() {
+        const listDiv = document.getElementById('quiz-list');
         try {
             const res = await fetch(`${API_URL}?action=getQuiz&userId=${USER_ID}`);
             const data = await res.json();
-            const list = document.getElementById('quiz-list');
-            list.innerHTML = "";
+            listDiv.innerHTML = "";
 
             if (!data.quizzes || Object.keys(data.quizzes).length === 0) {
-                list.innerHTML = "目前沒有開放的測驗。";
+                listDiv.innerHTML = "<p style='text-align:center'>目前沒有已開放的測驗。</p>";
                 return;
             }
 
@@ -69,44 +72,55 @@
                 card.innerHTML = `
                     <div class="info">
                         <h3>${quiz.title}</h3>
-                        ${isDone ? `<div class="score-text">上次得分：${quiz.prevScore}</div>` : '<div style="color:#777">尚未作答</div>'}
+                        ${isDone ? `<div class="score-display">上次得分：${quiz.prevScore}</div>` : '<div style="color:#777">尚未挑戰</div>'}
                     </div>
                     ${isDone 
-                        ? `<button class="btn btn-review" onclick="showReview('${quiz.prevDetail}')">查看復盤</button>`
-                        : `<button class="btn btn-start" onclick="startQuiz('${qId}')">點擊作答</button>`
+                        ? `<button class="btn btn-review" onclick="showReview('${quiz.prevDetail.replace(/\n/g, "\\n")}')">查看復盤</button>`
+                        : `<button class="btn btn-start" onclick="handleQuizProcess('${qId}')">點擊作答</button>`
                     }
                 `;
-                list.appendChild(card);
+                listDiv.appendChild(card);
             });
         } catch (e) {
-            document.getElementById('quiz-list').innerHTML = "資料載入失敗，請確認 GAS 部署權限。";
-            console.error("Error:", e);
+            listDiv.innerHTML = "<p style='color:red'>載入失敗，請確認網路或 GAS 權限。</p>";
+            console.error(e);
         }
     }
 
-    // 執行作答 (模擬提交分數與詳細答案)
-    async function startQuiz(qId) {
-        if(confirm(`準備好開始「${qId}」測驗了嗎？提交後將無法更改。`)) {
-            const fakeScore = Math.floor(Math.random() * 21) + 80; // 模擬隨機分數 80-100
-            const fakeDetail = "正確率：90%\n錯題解析：第2題選項(B)才是正確的，因為 Web3 核心在於去中心化。\n建議：多複習區塊鏈基礎架構。";
+    // 2. 作答流程：作答完畢後將結果寫入「答案」分頁
+    async function handleQuizProcess(qId) {
+        // 這裡應該接入你真正的測驗介面，目前以確認視窗與模擬分數代替
+        if(confirm(`確定要開始並提交「${qId}」的測驗嗎？`)) {
             
-            // 提交到 GAS 的「答案」分頁
-            const url = `${API_URL}?action=submitRecord&userId=${USER_ID}&qId=${qId}&score=${fakeScore}&detail=${encodeURIComponent(fakeDetail)}`;
-            
+            // 模擬測驗數據
+            const score = Math.floor(Math.random() * 31) + 70; // 隨機 70~100 分
+            const detail = `作答紀錄：\n1. 正確\n2. 錯誤 (正確答案為A)\n3. 正確\n\n解析：這部分重點在於對技術指標的交叉驗證。`;
+
+            // 顯示儲存中狀態
+            const btn = event.target;
+            btn.innerText = "儲存結果...";
+            btn.disabled = true;
+
             try {
-                const res = await fetch(url);
+                const submitUrl = `${API_URL}?action=submitRecord&userId=${USER_ID}&qId=${encodeURIComponent(qId)}&score=${score}&detail=${encodeURIComponent(detail)}`;
+                const res = await fetch(submitUrl);
                 const result = await res.json();
-                if(result.status === "success") {
-                    alert("作答完成並已存檔！");
-                    loadQuizzes(); // 重新整理畫面
+
+                if (result.status === "success") {
+                    alert("作答完成，結果已成功同步至雲端！");
+                    loadQuizzes(); // 重新整理列表，更新按鈕狀態
+                } else {
+                    throw new Error(result.message);
                 }
             } catch (err) {
-                alert("提交失敗，請檢查網路連線。");
+                alert("儲存失敗：" + err.message);
+                btn.innerText = "點擊作答";
+                btn.disabled = false;
             }
         }
     }
 
-    // 彈出復盤視窗
+    // 3. 復盤彈窗控制
     function showReview(detail) {
         document.getElementById('modal-content').innerText = detail;
         document.getElementById('modal').style.display = 'block';
@@ -118,7 +132,7 @@
         document.getElementById('overlay').style.display = 'none';
     }
 
-    // 初始啟動
+    // 啟動載入
     loadQuizzes();
 </script>
 
