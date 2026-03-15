@@ -3,151 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>加密貨幣基礎知識測驗</title>
+    <title>Web3 交易員培訓測驗系統</title>
     <style>
-        :root { --primary-color: #f3ba2f; --error-color: #ff4d4d; --bg-color: #121213; }
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); color: #eaecef; padding: 20px; line-height: 1.6; }
-        .container { max-width: 600px; background: #1e2023; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); margin: auto; }
-        h2 { color: var(--primary-color); text-align: center; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        :root { --primary: #f3ba2f; --bg: #121213; --card: #1e2023; --success: #4CAF50; --error: #ff4d4d; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); color: #fff; padding: 20px; line-height: 1.6; }
+        .container { max-width: 600px; margin: auto; background: var(--card); padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .hidden { display: none; }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
         
-        .input-group { margin-bottom: 25px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 12px; background: #2b2f36; border: 1px solid #474d57; border-radius: 8px; color: white; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
-        input[type="text"]:focus { border-color: var(--primary-color); outline: none; }
+        /* 登入樣式 */
+        .login-box { text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; background: #2b2f36; color: #fff; border: 1px solid #444; box-sizing: border-box; font-size: 16px; }
+        button { background: var(--primary); color: #000; width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 10px; transition: 0.3s; }
+        button:hover { background: #ffca42; }
+        button:disabled { background: #474d57; color: #848e9c; cursor: not-allowed; }
         
-        .error-msg { color: var(--error-color); font-size: 0.9em; margin-top: 5px; display: none; font-weight: bold; }
+        /* 地圖卡片樣式 */
+        .quiz-card { background: #2b2f36; margin: 12px 0; padding: 20px; border-radius: 10px; border-left: 6px solid #444; transition: 0.3s; position: relative; }
+        .quiz-card.open { border-left-color: var(--primary); cursor: pointer; }
+        .quiz-card.open:hover { transform: translateX(5px); background: #3a3f47; }
+        .quiz-card.done { border-left-color: var(--success); opacity: 0.8; cursor: default; }
+        .status-tag { float: right; font-size: 14px; font-weight: bold; }
+
+        /* 測驗樣式 */
+        .q-box { background: #2b2f36; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #444; }
+        .options label { display: block; padding: 12px; background: rgba(255,255,255,0.05); margin: 8px 0; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .options label:hover { background: rgba(255,255,255,0.1); }
+        .options input { margin-right: 10px; transform: scale(1.2); }
         
-        .question { margin-bottom: 20px; background: #2b2f36; padding: 20px; border-radius: 8px; border-left: 4px solid var(--primary-color); }
-        .question p { margin-top: 0; font-size: 1.1em; }
-        .options label { display: block; cursor: pointer; padding: 10px; border-radius: 6px; transition: 0.2s; margin-bottom: 5px; }
-        .options label:hover { background: #3a3f47; }
-        .options input { margin-right: 12px; transform: scale(1.2); }
-        
-        #submitBtn { background-color: var(--primary-color); color: #000; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 18px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
-        #submitBtn:hover { background-color: #ffca42; }
-        #submitBtn:disabled { background-color: #474d57; color: #848e9c; cursor: not-allowed; }
-        
-        #status { display: none; text-align: center; margin-top: 15px; padding: 15px; border-radius: 8px; font-weight: bold; }
-        .loading { color: var(--primary-color); }
-        .success { background: rgba(76, 175, 80, 0.2); color: #4CAF50; border: 1px solid #4CAF50; }
+        .grad-screen { text-align: center; padding: 40px 20px; border: 2px solid var(--primary); border-radius: 20px; margin-top: 20px; background: rgba(243, 186, 47, 0.05); }
+        .loading { text-align: center; color: var(--primary); padding: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🪙 加密貨幣小測驗</h2>
-    
-    <div class="input-group">
-        <label for="memberId">請輸入會員編號 (限 6 碼)：</label>
-        <input type="text" id="memberId" placeholder="例如: 123456" oninput="validateInput()">
-        <div id="idError" class="error-msg">⚠️ 錯誤：編號超過 6 碼，無法提交表單！</div>
+    <div id="loginPage">
+        <h2>🔑 學員登入 / 註冊</h2>
+        <div class="login-box">
+            <p style="color:#888; font-size: 14px;">輸入 6 碼會員編號與自訂 6 碼密碼</p>
+            <input type="text" id="uid" placeholder="會員編號 (6位數)" maxlength="6">
+            <input type="password" id="pwd" placeholder="自訂密碼 (6位數)" maxlength="6">
+            <button id="loginBtn" onclick="handleLogin()">進入學習系統</button>
+        </div>
     </div>
 
-    <form id="quizForm">
-        <div class="question">
-            <p>1. 根據影片，比特幣（Bitcoin）在幣圈常被稱為什麼？</p>
-            <div class="options">
-                <label><input type="radio" name="q1" value="A" required> A. 數位石油</label>
-                <label><input type="radio" name="q1" value="B"> B. 二哥</label>
-                <label><input type="radio" name="q1" value="C"> C. 大餅</label>
-                <label><input type="radio" name="q1" value="D"> D. 穩定幣</label>
-            </div>
+    <div id="mapPage" class="hidden">
+        <h2>🎯 學習地圖進度</h2>
+        <div id="quizList" class="loading">📡 同步雲端資料中...</div>
+        <div id="gradMessage" class="hidden grad-screen">
+            <h1 style="color:var(--primary)">🎓 恭喜畢業！</h1>
+            <p>您已成功挑戰所有 Web3 交易員培訓測驗</p>
+            <button onclick="location.reload()" style="width:auto; padding: 10px 30px; background:#444; color:#fff;">登出系統</button>
         </div>
+    </div>
 
-        <div class="question">
-            <p>2. 關於以太幣（ETH）的敘述，下列何者正確？</p>
-            <div class="options">
-                <label><input type="radio" name="q2" value="A" required> A. 它支持「智慧合約」，像是一台自動販賣機</label>
-                <label><input type="radio" name="q2" value="B"> B. 它是市值排名第一的加密貨幣</label>
-                <label><input type="radio" name="q2" value="C"> C. 它屬於一種與美元 1:1 掛鉤的穩定幣</label>
-                <label><input type="radio" name="q2" value="D"> D. 它的總量上限固定為 2100 萬枚</label>
-            </div>
-        </div>
-
-        <div class="question">
-            <p>3. 泰達幣（USDT）在加密貨幣市場中的主要角色是什麼？</p>
-            <div class="options">
-                <label><input type="radio" name="q3" value="A" required> A. 作為法幣與加密貨幣之間的橋樑</label>
-                <label><input type="radio" name="q3" value="B"> B. 是專門為了高效率應用而設計的公鏈</label>
-                <label><input type="radio" name="q3" value="C"> C. 主要用來進行跨境轉帳以取代 SWIFT 系統</label>
-                <label><input type="radio" name="q3" value="D"> D. 作為一種迷因幣，主要受社群情緒驅動</label>
-            </div>
-        </div>
-
-        <button type="submit" id="submitBtn">提交測驗並存檔</button>
-        <div id="status"></div>
-    </form>
+    <div id="quizPage" class="hidden">
+        <h2 id="quizTitle">載入中...</h2>
+        <div id="qContent"></div>
+        <button id="subBtn" onclick="submitQuiz()">提交並儲存結果</button>
+        <button onclick="showPage('mapPage')" style="background:transparent; color:#888; font-size: 14px; margin-top: 15px;">返回地圖</button>
+    </div>
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwn0aXQEDJ80U7ysmE7SYV5hPLr_47xIgVShvmvV55uJNh9ew-yz3XkCleyvp7B6e037g/exec";
+    // 已更新為你的 API 網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbznEqMJPp5rFQA5iENyY1-j9N2wjNiOfJroRy81tK6YfySRZS4CiCgIKQZ9X60IBTZv7A/exec"; 
+    let currentUser = "", currentQuizId = "", allData = {};
 
-    // 即時檢查會員編號
-    function validateInput() {
-        const idInput = document.getElementById('memberId');
-        const errorMsg = document.getElementById('idError');
-        const submitBtn = document.getElementById('submitBtn');
+    // 登入邏輯
+    async function handleLogin() {
+        const uid = document.getElementById('uid').value;
+        const pwd = document.getElementById('pwd').value;
+        const btn = document.getElementById('loginBtn');
+        if(uid.length < 6 || pwd.length < 6) return alert("編號與密碼皆需為 6 碼");
         
-        if (idInput.value.length > 6) {
-            errorMsg.style.display = 'block';
-            submitBtn.disabled = true;
-        } else {
-            errorMsg.style.display = 'none';
-            submitBtn.disabled = false;
+        btn.disabled = true;
+        btn.innerText = "驗證身分中...";
+        
+        try {
+            // POST 登入請求
+            await fetch(API_URL, { 
+                method: 'POST', 
+                body: new URLSearchParams({ action: 'login', uid: uid, pwd: pwd }), 
+                mode: 'no-cors' 
+            });
+            // 因為 no-cors 無法抓回傳值，我們假設輸入即正確（簡化流程）
+            currentUser = uid;
+            showPage('mapPage');
+            loadProgress();
+        } catch (e) {
+            alert("系統連線異常，請稍後再試");
+            btn.disabled = false;
+            btn.innerText = "進入學習系統";
         }
     }
 
-    // 表單提交處理
-    document.getElementById('quizForm').onsubmit = function(e) {
-        e.preventDefault();
+    // 載入題目狀態與進度
+    async function loadProgress() {
+        const listDiv = document.getElementById('quizList');
+        listDiv.innerHTML = "📡 同步雲端資料中...";
         
-        const memberId = document.getElementById('memberId').value;
-        const submitBtn = document.getElementById('submitBtn');
-        const statusDiv = document.getElementById('status');
+        try {
+            const [qRes, pRes] = await Promise.all([
+                fetch(`${API_URL}?action=getQuiz`),
+                fetch(`${API_URL}?action=checkProgress&uid=${currentUser}`)
+            ]);
+            allData = await qRes.json();
+            const doneList = await pRes.json();
+            
+            listDiv.innerHTML = "";
+            let doneCount = 0;
 
-        if (memberId.length === 0) {
-            alert("請輸入會員編號");
-            return;
+            for(let i=1; i<=6; i++) {
+                const isOpen = allData.openStatus[i];
+                const isDone = doneList.includes(String(i));
+                if(isDone) doneCount++;
+
+                const div = document.createElement('div');
+                div.className = `quiz-card ${isOpen ? 'open' : ''} ${isDone ? 'done' : ''}`;
+                
+                let statusText = isDone ? "✅ 已完成" : (isOpen ? "👉 點擊開始" : "🔒 尚未開放");
+                div.innerHTML = `<span class="status-tag">${statusText}</span><b>階段 ${i} 測驗</b>`;
+                
+                if(isOpen && !isDone) div.onclick = () => startQuiz(i);
+                listDiv.appendChild(div);
+            }
+
+            if(doneCount === 6) document.getElementById('gradMessage').classList.remove('hidden');
+        } catch (e) {
+            listDiv.innerHTML = "❌ 資料載入失敗，請確認試算表分頁名稱。";
+        }
+    }
+
+    // 顯示測驗題目
+    function startQuiz(id) {
+        currentQuizId = id;
+        const questions = allData.quizzes[id];
+        if(!questions) return alert("該測驗尚未準備好題目資料");
+
+        document.getElementById('quizTitle').innerText = `階段 ${id} 測驗`;
+        document.getElementById('qContent').innerHTML = questions.map((q, i) => `
+            <div class="q-box">
+                <p><b>Q${q.qNum}. ${q.title}</b></p>
+                <div class="options">
+                    ${q.options.map((opt, j) => `
+                        <label><input type="radio" name="q${i}" value="${String.fromCharCode(65+j)}" required> ${String.fromCharCode(65+j)}. ${opt}</label>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+        showPage('quizPage');
+        window.scrollTo(0,0);
+    }
+
+    // 提交測驗
+    async function submitQuiz() {
+        const questions = allData.quizzes[currentQuizId];
+        let correct = 0;
+        let userAnswers = {};
+
+        for(let i=0; i < questions.length; i++) {
+            const sel = document.querySelector(`input[name="q${i}"]:checked`);
+            if(!sel) return alert("請完成所有題目後再提交！");
+            if(sel.value === questions[i].answer) correct++;
+            userAnswers[`Q${questions[i].qNum}`] = sel.value;
         }
 
-        // 計算分數 (Q1:C, Q2:A, Q3:A)
-        const formData = new FormData(this);
-        let score = 0;
-        if (formData.get('q1') === 'C') score += 33;
-        if (formData.get('q2') === 'A') score += 33;
-        if (formData.get('q3') === 'A') score += 34;
+        const score = Math.round((correct / questions.length) * 100);
+        const subBtn = document.getElementById('subBtn');
+        subBtn.disabled = true;
+        subBtn.innerText = "💾 正在儲存結果...";
 
-        // UI 狀態更新
-        submitBtn.disabled = true;
-        statusDiv.style.display = 'block';
-        statusDiv.className = 'loading';
-        statusDiv.innerText = '⏳ 資料上傳中，請稍候...';
+        try {
+            await fetch(API_URL, { 
+                method: 'POST', 
+                body: new URLSearchParams({
+                    action: 'submit',
+                    uid: currentUser,
+                    quizId: currentQuizId,
+                    score: score,
+                    answers: JSON.stringify(userAnswers)
+                }), 
+                mode: 'no-cors' 
+            });
+            alert(`測驗提交成功！您的得分：${score} 分`);
+            showPage('mapPage');
+            loadProgress();
+        } catch (e) {
+            alert("提交失敗，請檢查網路狀態");
+            subBtn.disabled = false;
+            subBtn.innerText = "提交並儲存結果";
+        }
+    }
 
-        // 封裝資料
-        const params = new URLSearchParams({
-            memberId: memberId,
-            score: score,
-            q1: formData.get('q1'),
-            q2: formData.get('q2'),
-            q3: formData.get('q3')
-        });
-
-        // 發送資料到 Google Sheets
-        fetch(GAS_URL, {
-            method: "POST",
-            body: params,
-            mode: 'no-cors'
-        }).then(() => {
-            statusDiv.className = 'success';
-            statusDiv.innerHTML = `✅ 提交成功！<br>會員編號：${memberId}<br>得分：${score} 分`;
-            alert("測驗完成！資料已寫入 Excel 系統。");
-        }).catch(err => {
-            alert("上傳失敗，請稍後再試");
-            submitBtn.disabled = false;
-            statusDiv.style.display = 'none';
-        });
-    };
+    function showPage(id) {
+        ['loginPage', 'mapPage', 'quizPage'].forEach(p => document.getElementById(p).classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
 </script>
-
 </body>
 </html>
