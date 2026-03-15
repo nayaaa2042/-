@@ -16,23 +16,23 @@
         button:hover { background: #ffca42; }
         button:disabled { background: #474d57; color: #848e9c; cursor: not-allowed; }
         
-        /* 地圖卡片樣式 */
-        .quiz-card { background: #2b2f36; margin: 15px 0; padding: 20px; border-radius: 12px; border-left: 6px solid #444; transition: 0.3s; cursor: not-allowed; }
+        /* 學習地圖卡片 */
+        .quiz-card { background: #2b2f36; margin: 15px 0; padding: 20px; border-radius: 12px; border-left: 6px solid #444; transition: 0.3s; cursor: not-allowed; position: relative; }
         .quiz-card.open { border-left-color: var(--primary); cursor: pointer; }
-        .quiz-card.done { border-left-color: var(--success); cursor: pointer; opacity: 0.9; }
+        .quiz-card.done { border-left-color: var(--success); cursor: pointer; opacity: 0.9; background: rgba(76, 175, 80, 0.05); }
         .quiz-card.open:hover { transform: translateX(8px); background: #3a3f47; }
         .status-tag { float: right; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); }
 
         /* 題目與復盤樣式 */
-        .q-box { background: #2b2f36; padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #3e444d; }
-        .option-label { display: block; padding: 12px; background: rgba(255,255,255,0.05); margin: 8px 0; border-radius: 6px; cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
-        .correct { border-color: var(--success) !important; background: rgba(76, 175, 80, 0.15) !important; color: var(--success); }
+        .q-box { background: #2b2f36; padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #3e444d; transition: 0.3s; }
+        .option-label { display: block; padding: 12px; background: rgba(255,255,255,0.05); margin: 8px 0; border-radius: 6px; cursor: pointer; border: 2px solid transparent; }
+        .correct { border-color: var(--success) !important; background: rgba(76, 175, 80, 0.15) !important; color: var(--success); font-weight: bold; }
         .wrong { border-color: var(--error) !important; background: rgba(255, 77, 77, 0.15) !important; color: var(--error); }
         
-        /* 畢業證書 */
-        .grad-screen { text-align: center; padding: 40px 20px; border: 3px solid var(--primary); border-radius: 20px; background: linear-gradient(145deg, #1e2023 0%, #2b2f36 100%); margin-top: 30px; position: relative; overflow: hidden; }
-        .grad-screen::after { content: "CERTIFIED"; position: absolute; top: -10px; right: -10px; background: var(--primary); color: #000; padding: 10px 40px; transform: rotate(45deg); font-weight: bold; font-size: 12px; }
-        .note { color: #f3ba2f; font-size: 14px; margin-top: 25px; background: rgba(243, 186, 47, 0.1); padding: 10px; border-radius: 5px; }
+        /* 畢業證書區塊 */
+        .grad-screen { text-align: center; padding: 40px 20px; border: 3px solid var(--primary); border-radius: 20px; background: linear-gradient(145deg, #1e2023 0%, #2b2f36 100%); margin-top: 30px; position: relative; }
+        .grad-screen h1 { font-size: 60px; margin: 0; filter: drop-shadow(0 0 10px var(--primary)); }
+        .note-box { color: #f3ba2f; font-size: 14px; margin-top: 25px; background: rgba(243, 186, 47, 0.1); padding: 15px; border-radius: 8px; border: 1px dashed var(--primary); }
     </style>
 </head>
 <body>
@@ -44,47 +44,48 @@
             <p style="color:#888;">輸入 6 碼會員編號與自訂密碼</p>
             <input type="text" id="uid" placeholder="會員編號 (6位數)" maxlength="6">
             <input type="password" id="pwd" placeholder="登入密碼 (6位數)" maxlength="6">
-            <button id="loginBtn" onclick="handleLogin()">開始學習之旅</button>
+            <button id="loginBtn" onclick="handleLogin()">進入學習地圖</button>
         </div>
     </div>
 
     <div id="mapPage" class="hidden">
-        <h2>🎯 學習地圖進度</h2>
-        <div id="quizList" style="text-align: center; color: var(--primary);">📡 正在載入進度...</div>
+        <h2>🎯 學習進度地圖</h2>
+        <div id="quizList" style="text-align: center; color: var(--primary);">📡 資料同步中...</div>
         
         <div id="gradMessage" class="hidden grad-screen">
-            <h1 style="font-size: 60px; margin: 0;">🎓</h1>
+            <h1>🎓</h1>
             <h2 style="color:var(--primary); margin: 10px 0;">恭喜畢業！</h2>
-            <p style="font-size: 18px;">學員 <b id="gradUid" style="color:var(--primary)"></b></p>
-            <p>您已成功挑戰所有階段測驗，正式結業！</p>
-            <div class="note">
-                <b>📌 畢業備註：</b><br>
+            <p style="font-size: 18px; letter-spacing: 1px;">學員編號：<b id="gradUid" style="color:var(--primary)"></b></p>
+            <p>您已成功挑戰所有 6 個階段測驗，正式結業！</p>
+            <div class="note-box">
+                <b>💡 結業提醒：</b><br>
                 請截圖該畫面上傳至社群記事本留言區
             </div>
-            <button onclick="location.reload()" style="width:auto; padding: 8px 20px; font-size:14px; background:#444; color:#fff; margin-top:20px;">登出帳號</button>
+            <button onclick="location.reload()" style="width:auto; padding: 10px 25px; font-size:14px; background:#444; color:#fff; margin-top:20px;">登出系統</button>
         </div>
     </div>
 
     <div id="quizPage" class="hidden">
         <h2 id="quizTitle"></h2>
-        <div id="reviewTag" class="hidden" style="text-align:center; color:var(--primary); background:rgba(243,186,47,0.1); padding:5px; border-radius:5px; margin-bottom:20px;">🔍 復盤模式：僅供查看正確答案</div>
+        <div id="reviewBanner" class="hidden" style="text-align:center; color:var(--primary); background:rgba(243,186,47,0.1); padding:8px; border-radius:5px; margin-bottom:20px; font-weight:bold;">🔍 復盤模式：僅查看正確答案</div>
         <div id="qContent"></div>
-        <button id="subBtn" onclick="submitQuiz()">提交測驗</button>
+        <button id="subBtn" onclick="submitQuiz()">提交並存檔結果</button>
         <button onclick="showPage('mapPage')" style="background:transparent; color:#888; font-size: 14px; border: 1px solid #444; margin-top: 15px;">返回學習地圖</button>
     </div>
 </div>
 
 <script>
-    // 已更新為您最新的 API 網址
-    const API_URL = "https://script.google.com/macros/s/AKfycbyHRX2KD9rPgwh-UwvP9fyeDXD-SoLIdCHwEhzxzqU2LedZo8nnLlUe64zujS5l44U7mA/exec"; 
+    // 🔗 您的最新 API 網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbw7QEnxDd6J1qVZkjLFlMHZvpoZUqeVqKeGtUGURGWg7Tp1jgRoTe2DP4Tw0dLWbMhjMg/exec"; 
     let currentUser = "", allData = {}, userProgress = {};
 
     async function handleLogin() {
         const uid = document.getElementById('uid').value;
         const pwd = document.getElementById('pwd').value;
-        if(uid.length < 6 || pwd.length < 6) return alert("編號與密碼皆需為 6 碼");
+        if(uid.length < 6 || pwd.length < 6) return alert("編號與密碼皆需為 6 碼數字");
         document.getElementById('loginBtn').disabled = true;
         
+        // 註冊/登入
         await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'login', uid, pwd }), mode: 'no-cors' });
         currentUser = uid;
         showPage('mapPage');
@@ -113,7 +114,7 @@
                 const div = document.createElement('div');
                 div.className = `quiz-card ${isDone ? 'done' : (isOpen ? 'open' : '')}`;
                 let color = isDone ? '#4CAF50' : (isOpen ? '#f3ba2f' : '#888');
-                div.innerHTML = `<span class="status-tag" style="color:${color}">${isDone ? '已完成 ('+record.score+')' : (isOpen ? '點擊作答' : '尚未開放')}</span><b>階段 ${i} 測驗</b>`;
+                div.innerHTML = `<span class="status-tag" style="color:${color}">${isDone ? '已完成 ('+record.score+')' : (isOpen ? '開放中' : '尚未開放')}</span><b>階段 ${i} 測驗</b>`;
                 
                 if(isOpen || isDone) div.onclick = () => startQuiz(i, isDone);
                 listDiv.appendChild(div);
@@ -123,15 +124,15 @@
                 document.getElementById('gradUid').innerText = currentUser;
                 document.getElementById('gradMessage').classList.remove('hidden');
             }
-        } catch (e) { listDiv.innerHTML = "❌ 資料同步失敗，請確認網路或 API。"; }
+        } catch (e) { listDiv.innerHTML = "❌ 資料同步異常，請重新登入。"; }
     }
 
     function startQuiz(id, isDone) {
         const questions = allData.quizzes[id];
         const record = userProgress[String(id)];
-        document.getElementById('quizTitle').innerText = `階段 ${id} ${isDone ? '復盤' : '測驗'}`;
+        document.getElementById('quizTitle').innerText = `階段 ${id} ${isDone ? '復盤復盤' : '測驗'}`;
         document.getElementById('subBtn').style.display = isDone ? 'none' : 'block';
-        document.getElementById('reviewTag').style.display = isDone ? 'block' : 'none';
+        document.getElementById('reviewBanner').style.display = isDone ? 'block' : 'none';
 
         document.getElementById('qContent').innerHTML = questions.map((q, i) => {
             const userChoice = isDone ? record.userAnswers[`Q${i+1}`] : null;
@@ -154,7 +155,7 @@
                             `;
                         }).join('')}
                     </div>
-                    ${isDone ? `<p style="color:var(--primary); font-size:14px; margin-top:10px;">💡 正確答案：${q.answer}</p>` : ''}
+                    ${isDone ? `<p style="color:var(--primary); font-size:14px; margin-top:10px;">💡 解析：本題正確答案為 (${q.answer})</p>` : ''}
                 </div>
             `;
         }).join('');
@@ -175,13 +176,13 @@
         const score = Math.round((correct / questions.length) * 100);
         const subBtn = document.getElementById('subBtn');
         subBtn.disabled = true;
-        subBtn.innerText = "正在儲存成績...";
+        subBtn.innerText = "正在儲存結果...";
 
         await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ 
             action: 'submit', uid: currentUser, quizId: quizId, score: score + "分", answers: JSON.stringify(userAnswers) 
         }), mode: 'no-cors' });
         
-        alert(`測驗提交完成！您的得分：${score}`);
+        alert(`提交完成！您在階段 ${quizId} 獲得了 ${score} 分。`);
         showPage('mapPage');
         loadProgress();
     }
