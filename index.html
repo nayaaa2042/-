@@ -1,158 +1,188 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>學習進度地圖</title>
-    <style>
-        :root { --bg-color: #1a1c1e; --card-bg: #2b2d31; --gold: #ffb800; --text-color: #e0e0e0; }
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; margin: 0; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 600px; padding: 20px; box-sizing: border-box; }
-        h2 { text-align: center; color: var(--gold); margin-bottom: 30px; }
+  <style>
+    :root { --bg: #121212; --card: #1e1e1e; --gold: #ffb800; --green: #00c853; --text: #e0e0e0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Arial, sans-serif; margin: 0; display: flex; justify-content: center; overflow-x: hidden; }
+    .app { width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
+    .card { background: var(--card); padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; border: 1px solid #333; }
+    h2 { color: var(--gold); text-align: center; margin-top: 0; }
+    
+    input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #252525; color: white; box-sizing: border-box; text-align: center; font-size: 1rem; }
+    .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; font-size: 1rem; }
+    .btn-gold { background: var(--gold); color: black; }
+    .btn-green { background: var(--green); color: white; }
+    .btn-outline { background: none; border: 1px solid #555; color: #888; margin-top: 20px; }
 
-        /* 地圖頁面 */
-        .map-card { 
-            background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-left: 6px solid var(--gold); cursor: pointer; transition: 0.3s;
-        }
-        .map-card.done { border-left-color: #43b581; opacity: 0.7; }
-        .tag { background: #35373c; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; color: #aaa; }
+    /* 學習地圖 */
+    .map-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #252525; margin-bottom: 15px; border-radius: 12px; border-left: 6px solid var(--gold); }
+    .map-item.finished { border-left-color: var(--green); background: #1a251e; }
+    .map-info { font-weight: bold; font-size: 1.1rem; }
+    .map-btn { width: auto; padding: 8px 15px; margin: 0; font-size: 0.85rem; }
 
-        /* 測驗頁面 */
-        .quiz-view { display: none; background: var(--card-bg); border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .q-title { font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px; }
-        .opt-btn { 
-            background: #383a40; border: 1px solid #4e5058; color: #fff; width: 100%;
-            padding: 18px; margin-bottom: 12px; border-radius: 10px; text-align: left;
-            cursor: pointer; font-size: 1rem; transition: 0.2s;
-        }
-        .opt-btn:hover { background: #404249; }
-        .opt-btn.active { border-color: var(--gold); background: #404249; }
-        
-        .footer-btns { margin-top: 20px; }
-        .btn-main { background: #4e5058; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .btn-back { background: none; border: 1px solid #4e5058; color: #888; width: 100%; padding: 12px; border-radius: 10px; margin-top: 10px; cursor: pointer; }
-    </style>
+    /* 測驗頁面 */
+    .option { background: #333; padding: 15px; margin: 10px 0; border-radius: 8px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+    .option:hover { border-color: var(--gold); }
+    .option.selected { background: var(--gold); color: black; font-weight: bold; }
+
+    /* 畢業畫框 */
+    .congrats-card { text-align: center; border: 3px dashed var(--gold); background: rgba(255, 184, 0, 0.05); }
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div id="view-map">
-        <h2>🎯 學習進度地圖</h2>
-        <div id="map-list">載入雲端地圖中...</div>
-    </div>
+<div class="app">
+  <div id="auth-view" class="card">
+    <h2>學員驗證登入</h2>
+    <p style="text-align: center; color: #888; font-size: 0.85rem;">首次進入請自訂密碼完成註冊</p>
+    <input type="text" id="userId" placeholder="會員編號 (例如 000001)">
+    <input type="password" id="password" placeholder="登入密碼">
+    <button class="btn btn-gold" onclick="login()">進入學習地圖</button>
+  </div>
 
-    <div id="view-quiz" class="quiz-view">
-        <h2 id="stage-title" style="font-size: 1.2rem; margin-top:0;"></h2>
-        <div id="quiz-content"></div>
-        <div class="footer-btns">
-            <button id="btn-next" class="btn-main" onclick="handleNext()">下一題</button>
-            <button class="btn-back" onclick="exitQuiz()">返回地圖</button>
-        </div>
+  <div id="map-view" class="hidden">
+    <h2>🎯 學習進度地圖</h2>
+    <div id="map-list"></div>
+    
+    <div id="grad-view" class="card congrats-card hidden">
+        <h2 style="font-size: 1.8rem; margin-bottom: 10px;">🎉 恭喜畢業</h2>
+        <p id="grad-id" style="font-size: 1.3rem; font-weight: bold; color: var(--gold);"></p>
+        <p>您已正式從「加密貨幣新手班」畢業！</p>
+        <p style="background: var(--gold); color: black; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 0.9rem;">
+            請立即截圖此畫面<br>上傳至社群記事本留言區
+        </p>
     </div>
+    <button class="btn btn-outline" onclick="location.reload()">切換帳號</button>
+  </div>
+
+  <div id="quiz-view" class="hidden">
+    <h2 id="quiz-title"></h2>
+    <div id="quiz-content" class="card"></div>
+    <button id="submit-btn" class="btn btn-gold hidden" onclick="processSubmit()">確認提交測驗</button>
+    <button class="btn btn-outline" onclick="loadMap()">放棄返回地圖</button>
+  </div>
+
+  <div id="result-view" class="hidden">
+    <h2 id="res-title"></h2>
+    <div id="res-content" class="card" style="line-height: 1.8;"></div>
+    <button class="btn btn-gold" onclick="loadMap()">返回學習地圖</button>
+  </div>
 </div>
 
 <script>
-    // 已更新為你的最新 GAS 網址
-    const API = "https://script.google.com/macros/s/AKfycbxw9DHVse2RFDd5pLQWARcTu35hncsZ3EWsh62bVSSE9gWX_gD-kVh-4f55rCU9qJ3m/exec";
-    const UID = "MEMBER_001"; // 預設會員編號
-    let mapData = [];
-    let currentStage = null;
-    let currentIdx = 0;
-    let userAnswers = [];
-    let selectedOpt = null;
+  let auth = { userId: "", password: "" };
+  let activeQuestions = [];
+  let selections = [];
+  let currentStage = "";
 
-    async function fetchMap() {
-        const res = await fetch(`${API}?action=getMapData&userId=${UID}`);
-        const result = await res.json();
-        mapData = result.mapData;
-        renderMap();
-    }
+  function runGAS(data, success) {
+    google.script.run.withSuccessHandler(success).handleAction(data);
+  }
 
-    function renderMap() {
-        const list = document.getElementById('map-list');
-        list.innerHTML = "";
-        mapData.forEach(item => {
-            const card = document.createElement('div');
-            card.className = `map-card ${item.isFinished ? 'done' : ''}`;
-            card.onclick = () => {
-                if(item.isFinished) return alert("此階段測驗已完成！");
-                if(item.questions.length === 0) return alert("此階段目前無開放題目。");
-                enterQuiz(item);
-            };
-            card.innerHTML = `
-                <span style="font-weight:bold;">${item.stageName}</span>
-                <span class="tag">${item.isFinished ? '已完成' : '開放中'}</span>
-            `;
-            list.appendChild(card);
-        });
-    }
+  function login() {
+    auth.userId = document.getElementById('userId').value;
+    auth.password = document.getElementById('password').value;
+    if(!auth.userId || !auth.password) return alert("請輸入編號與密碼");
+    loadMap();
+  }
 
-    function enterQuiz(stage) {
-        currentStage = stage;
-        currentIdx = 0;
-        userAnswers = [];
-        document.getElementById('view-map').style.display = 'none';
-        document.getElementById('view-quiz').style.display = 'block';
-        document.getElementById('stage-title').innerText = stage.stageName;
-        renderQuestion();
-    }
+  function loadMap() {
+    runGAS({ action: "getMap", ...auth }, function(res) {
+      if(res.status === "error") return alert(res.message);
+      
+      showView('map-view');
+      const list = document.getElementById('map-list');
+      list.innerHTML = "";
+      let count = 0;
 
-    function renderQuestion() {
-        selectedOpt = null;
-        const q = currentStage.questions[currentIdx];
-        const content = document.getElementById('quiz-content');
-        content.innerHTML = `
-            <div class="q-title">Q${currentIdx+1}. ${q.title}</div>
-            ${q.options.map((opt, i) => `
-                <button class="opt-btn" onclick="selectOpt(this, ${i})">${['A','B','C','D'][i]}. ${opt}</button>
-            `).join('')}
+      res.map.forEach(m => {
+        if(m.isFinished) count++;
+        const item = document.createElement('div');
+        item.className = `map-item ${m.isFinished ? 'finished' : ''}`;
+        item.innerHTML = `
+          <div class="map-info">${m.name}</div>
+          ${m.isFinished 
+            ? `<button class="btn btn-green map-btn" onclick="showResult('${m.name}', '${m.score}', '${m.detail}')">檢視結果</button>`
+            : `<button class="btn btn-gold map-btn" onclick="startQuiz('${m.name}')">開始作答</button>`}
         `;
-        document.getElementById('btn-next').innerText = currentIdx === currentStage.questions.length - 1 ? "儲存結果並提交" : "下一題";
-    }
+        list.appendChild(item);
+      });
 
-    function selectOpt(btn, idx) {
-        document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedOpt = ['A','B','C','D'][idx];
-    }
+      if(count === 6) {
+        document.getElementById('grad-view').classList.remove('hidden');
+        document.getElementById('grad-id').innerText = `學員：${res.userId}`;
+      }
+    });
+  }
 
-    async function handleNext() {
-        if (!selectedOpt) return alert("請先選擇一個選項");
-        userAnswers.push(selectedOpt);
+  function startQuiz(stage) {
+    currentStage = stage;
+    runGAS({ action: "getQuestions", stage: stage, ...auth }, function(res) {
+      showView('quiz-view');
+      document.getElementById('quiz-title').innerText = stage;
+      const container = document.getElementById('quiz-content');
+      container.innerHTML = "";
+      activeQuestions = res.questions;
+      selections = new Array(activeQuestions.length).fill(null);
 
-        if (currentIdx < currentStage.questions.length - 1) {
-            currentIdx++;
-            renderQuestion();
-        } else {
-            submitFinal();
-        }
-    }
-
-    async function submitFinal() {
-        const btn = document.getElementById('btn-next');
-        btn.innerText = "正在儲存結果...";
-        btn.disabled = true;
-
-        // 計算分數 (簡單比對)
-        let score = 0;
-        currentStage.questions.forEach((q, i) => {
-            if(q.answer === userAnswers[i]) score += 10;
+      activeQuestions.forEach((q, qIdx) => {
+        const div = document.createElement('div');
+        div.innerHTML = `<p style="margin-top:20px;"><b>Q${qIdx+1}. ${q.question}</b></p>`;
+        q.options.forEach((opt, oIdx) => {
+          const char = String.fromCharCode(65 + oIdx);
+          const oDiv = document.createElement('div');
+          oDiv.className = `option opt-group-${qIdx}`;
+          oDiv.innerText = `${char}. ${opt}`;
+          oDiv.onclick = () => {
+            selections[qIdx] = char;
+            document.querySelectorAll(`.opt-group-${qIdx}`).forEach(el => el.classList.remove('selected'));
+            oDiv.classList.add('selected');
+            if(!selections.includes(null)) document.getElementById('submit-btn').classList.remove('hidden');
+          };
+          div.appendChild(oDiv);
         });
+        container.appendChild(div);
+      });
+    });
+  }
 
-        const url = `${API}?action=submitRecord&userId=${UID}&stage=${currentStage.stageName}&score=${score}&detail=${userAnswers.join(',')}`;
-        await fetch(url);
-        
-        alert("作答完畢！紀錄已成功儲存。");
-        location.reload();
-    }
+  function processSubmit() {
+    let score = 0;
+    let log = "";
+    activeQuestions.forEach((q, i) => {
+      const ok = selections[i] === q.answer;
+      if(ok) score += (100 / activeQuestions.length);
+      log += `Q${i+1}:${selections[i]}(${ok ? '對' : '錯,正解:'+q.answer}) `;
+    });
 
-    function exitQuiz() {
-        if(confirm("確定要離開嗎？目前的作答進度將不會儲存。")) location.reload();
-    }
+    runGAS({ action: "submitQuiz", stage: currentStage, score: Math.round(score), detail: log, ...auth }, function(res) {
+      if(res.status === "success") {
+        alert("測驗提交成功！");
+        loadMap();
+      }
+    });
+  }
 
-    fetchMap();
+  function showResult(stage, score, detail) {
+    showView('result-view');
+    document.getElementById('res-title').innerText = `${stage} 復盤`;
+    document.getElementById('res-content').innerHTML = `
+      <div style="text-align:center; font-size:1.5rem; color:var(--green); font-weight:bold;">得分：${score}</div>
+      <hr style="border:0; border-top:1px solid #444; margin:15px 0;">
+      <p><b>詳細作答紀錄：</b></p>
+      <p style="background:#111; padding:15px; border-radius:8px; font-family:monospace;">${detail}</p>
+    `;
+  }
+
+  function showView(id) {
+    ['auth-view', 'map-view', 'quiz-view', 'result-view'].forEach(v => {
+      document.getElementById(v).classList.add('hidden');
+    });
+    document.getElementById(id).classList.remove('hidden');
+    window.scrollTo(0,0);
+  }
 </script>
+
 </body>
 </html>
