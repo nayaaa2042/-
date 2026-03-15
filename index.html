@@ -3,113 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>測驗系統</title>
+    <title>教育測驗系統</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: white; display: flex; justify-content: center; padding: 20px; }
-        .container { width: 100%; max-width: 600px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #121212; color: #e0e0e0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; }
         .quiz-card { 
-            background: #2c2e33; 
-            padding: 20px; 
-            border-radius: 12px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background: #1e1e1e; padding: 20px; border-radius: 15px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-left: 5px solid #ff9900; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        .quiz-title { font-size: 1.2rem; color: #ffcc00; font-weight: bold; }
-        .btn-action { 
-            background: #ff9900; color: white; border: none; padding: 10px 20px; 
-            border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s;
+        .quiz-card.done { border-left-color: #00c853; }
+        .info h3 { margin: 0 0 5px 0; color: #ffcc00; }
+        .score-text { font-size: 0.9rem; color: #00c853; font-weight: bold; }
+        .btn { 
+            padding: 10px 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;
         }
-        .btn-action:hover { background: #e68a00; }
-        .btn-done { 
-            background: #555; color: #aaa; border: none; padding: 10px 20px; 
-            border-radius: 6px; cursor: not-allowed; font-weight: bold;
-        }
+        .btn-start { background: #ff9900; color: white; }
+        .btn-start:hover { background: #e68a00; }
+        .btn-review { background: #333; color: #00c853; border: 1px solid #00c853; }
+        .btn-review:hover { background: #00c853; color: white; }
+        
+        /* 復盤彈窗 */
+        #modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#252525; padding:20px; border-radius:10px; width:85%; max-width:400px; box-shadow:0 0 20px black; z-index:100; }
+        #overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="quiz-list">
-        <p>正在載入測驗項目...</p>
-    </div>
+    <h2 style="text-align: center;">學習進度與測驗</h2>
+    <div id="quiz-list">載入資料中，請稍候...</div>
+</div>
+
+<div id="overlay" onclick="closeModal()"></div>
+<div id="modal">
+    <h3 style="color:#ffcc00">測驗復盤解析</h3>
+    <div id="modal-content" style="margin: 15px 0; line-height: 1.6; color: #ccc; white-space: pre-wrap;"></div>
+    <button class="btn btn-start" style="width:100%" onclick="closeModal()">關閉</button>
 </div>
 
 <script>
-    // 你的 GAS 部署網址
-    const API_URL = "https://script.google.com/macros/s/AKfycbykAKQS5TLxfd7mecabWJa7giLek0yAa-KNeWCA9USfQ9TAw8JUqjl64Jr51Q3Hf-iJUA/exec";
-    const USER_ID = "guest_user"; // 可根據需求修改 ID
+    // 已更新為你提供的最新網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbwgL3eyngW7tPJzvevgbzokraAFmGCi2XUDZOwMmN8kZPFXqilQbpRnrorvOame5E250g/exec";
+    const USER_ID = "MEMBER_001"; // 可對應試算表中的「會員編號」
 
-    // 1. 初始化：載入題目
+    // 載入題目列表與作答狀態
     async function loadQuizzes() {
         try {
-            const response = await fetch(`${API_URL}?action=getQuiz&userId=${USER_ID}`);
-            const data = await response.json();
-            renderQuizzes(data);
-        } catch (error) {
-            document.getElementById('quiz-list').innerHTML = "載入失敗，請檢查網路或 GAS 權限。";
-            console.error(error);
+            const res = await fetch(`${API_URL}?action=getQuiz&userId=${USER_ID}`);
+            const data = await res.json();
+            const list = document.getElementById('quiz-list');
+            list.innerHTML = "";
+
+            if (!data.quizzes || Object.keys(data.quizzes).length === 0) {
+                list.innerHTML = "目前沒有開放的測驗。";
+                return;
+            }
+
+            Object.keys(data.quizzes).forEach(qId => {
+                const quiz = data.quizzes[qId][0];
+                const isDone = quiz.isFinished;
+
+                const card = document.createElement('div');
+                card.className = `quiz-card ${isDone ? 'done' : ''}`;
+                card.innerHTML = `
+                    <div class="info">
+                        <h3>${quiz.title}</h3>
+                        ${isDone ? `<div class="score-text">上次得分：${quiz.prevScore}</div>` : '<div style="color:#777">尚未作答</div>'}
+                    </div>
+                    ${isDone 
+                        ? `<button class="btn btn-review" onclick="showReview('${quiz.prevDetail}')">查看復盤</button>`
+                        : `<button class="btn btn-start" onclick="startQuiz('${qId}')">點擊作答</button>`
+                    }
+                `;
+                list.appendChild(card);
+            });
+        } catch (e) {
+            document.getElementById('quiz-list').innerHTML = "資料載入失敗，請確認 GAS 部署權限。";
+            console.error("Error:", e);
         }
     }
 
-    // 2. 渲染 UI
-    function renderQuizzes(data) {
-        const container = document.getElementById('quiz-list');
-        container.innerHTML = ""; // 清空載入中文字
-
-        Object.keys(data.quizzes).forEach(qId => {
-            const quiz = data.quizzes[qId][0]; // 取得該類別的第一筆題目資訊
-            const isDone = quiz.isFinished;
-
-            const card = document.createElement('div');
-            card.className = "quiz-card";
-            card.innerHTML = `
-                <span class="quiz-title">${quiz.title}</span>
-                <button 
-                    id="btn-${qId}" 
-                    class="${isDone ? 'btn-done' : 'btn-action'}" 
-                    onclick="handleStartQuiz('${qId}')"
-                    ${isDone ? 'disabled' : ''}>
-                    ${isDone ? '已完成' : '點擊作答'}
-                </button>
-            `;
-            container.appendChild(card);
-        });
-    }
-
-    // 3. 處理作答完成動作
-    async function handleStartQuiz(qId) {
-        // 這裡模擬測驗過程，你可以放你的測驗彈窗邏輯
-        const confirmDone = confirm(`確定要開始並提交「${qId}」的作答紀錄嗎？`);
-        
-        if (confirmDone) {
-            const btn = document.getElementById(`btn-${qId}`);
-            btn.innerText = "提交中...";
-            btn.disabled = true;
-
+    // 執行作答 (模擬提交分數與詳細答案)
+    async function startQuiz(qId) {
+        if(confirm(`準備好開始「${qId}」測驗了嗎？提交後將無法更改。`)) {
+            const fakeScore = Math.floor(Math.random() * 21) + 80; // 模擬隨機分數 80-100
+            const fakeDetail = "正確率：90%\n錯題解析：第2題選項(B)才是正確的，因為 Web3 核心在於去中心化。\n建議：多複習區塊鏈基礎架構。";
+            
+            // 提交到 GAS 的「答案」分頁
+            const url = `${API_URL}?action=submitRecord&userId=${USER_ID}&qId=${qId}&score=${fakeScore}&detail=${encodeURIComponent(fakeDetail)}`;
+            
             try {
-                // 發送紀錄到 GAS 的 Records 分頁
-                const response = await fetch(`${API_URL}?action=submitRecord&qId=${qId}&userId=${USER_ID}`);
-                const result = await response.json();
-
-                if (result.status === "success") {
-                    alert("作答紀錄已儲存！");
-                    // 立即更新 UI 狀態
-                    btn.innerText = "已完成";
-                    btn.className = "btn-done";
-                    btn.disabled = true;
+                const res = await fetch(url);
+                const result = await res.json();
+                if(result.status === "success") {
+                    alert("作答完成並已存檔！");
+                    loadQuizzes(); // 重新整理畫面
                 }
-            } catch (error) {
-                alert("提交失敗，請重試。");
-                btn.innerText = "點擊作答";
-                btn.disabled = false;
+            } catch (err) {
+                alert("提交失敗，請檢查網路連線。");
             }
         }
     }
 
-    // 啟動載入
+    // 彈出復盤視窗
+    function showReview(detail) {
+        document.getElementById('modal-content').innerText = detail;
+        document.getElementById('modal').style.display = 'block';
+        document.getElementById('overlay').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('modal').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    // 初始啟動
     loadQuizzes();
 </script>
 
