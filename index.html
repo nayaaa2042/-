@@ -3,135 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>加密學習測驗系統</title>
+    <title>加密學習地圖</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #121212; color: #e0e0e0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #121212; color: #e0e0e0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .login-card { background: #1e1e1e; padding: 30px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .main-container { width: 100%; max-width: 500px; display: none; }
-        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #252525; color: white; text-align: center; font-size: 1rem; }
-        input:focus { border-color: #ff9900; outline: none; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
-        .btn-gold { background: #ff9900; color: white; margin-top: 10px; }
-        .quiz-card { background: #1e1e1e; padding: 20px; border-radius: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #ff9900; }
-        .quiz-card.done { border-left-color: #00c853; background: #1a251e; }
-        .btn-review { background: #333; color: #00c853; border: 1px solid #00c853; width: auto; padding: 8px 15px; }
-        #modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#252525; padding:20px; border-radius:10px; width:85%; max-width:400px; z-index:100; border: 1px solid #444; }
-        #overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99; }
-        #msg { color: #ff4444; margin-top: 15px; font-size: 0.9rem; min-height: 1.2rem; }
+        .main-container { width: 100%; max-width: 600px; display: none; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #252525; color: white; text-align: center; }
+        
+        /* 學習地圖網格 */
+        .quiz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px; width: 100%; }
+        .quiz-card { 
+            background: #1e1e1e; padding: 25px; border-radius: 15px; 
+            text-align: center; border: 1px solid #444; transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .quiz-card.done { border-color: #00c853; background: #1a251e; }
+        .quiz-card h3 { margin: 0 0 10px 0; color: #ffcc00; }
+        
+        .btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 10px; }
+        .btn-gold { background: #ff9900; color: white; }
+        .btn-done { background: #333; color: #00c853; border: 1px solid #00c853; }
+        .score-badge { font-size: 0.85rem; color: #00c853; margin-bottom: 5px; font-weight: bold; }
+        
+        #modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#252525; padding:25px; border-radius:12px; width:85%; max-width:400px; z-index:100; border: 1px solid #444; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        #overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99; }
     </style>
 </head>
 <body>
 
 <div id="login-area" class="login-card">
-    <h2 style="color: #ffcc00; margin-bottom: 10px;">系統登入</h2>
-    <p style="font-size: 0.8rem; color: #888; margin-bottom: 20px;">新編號將自動註冊，請牢記您的密碼</p>
-    <input type="text" id="uid" placeholder="請輸入會員編號">
-    <input type="password" id="upw" placeholder="請設定/輸入 6 碼密碼" maxlength="6">
-    <button class="btn btn-gold" onclick="login()">驗證並進入</button>
-    <p id="msg"></p>
+    <h2 style="color: #ffcc00; margin-bottom: 5px;">學員驗證</h2>
+    <p style="font-size: 0.8rem; color: #777; margin-bottom: 20px;">請輸入編號與 6 碼密碼進入地圖</p>
+    <input type="text" id="uid" placeholder="會員編號">
+    <input type="password" id="upw" placeholder="6 碼密碼" maxlength="6">
+    <button class="btn btn-gold" onclick="login()">進入系統</button>
+    <p id="msg" style="color:#ff4444; margin-top:15px; font-size:0.9rem;"></p>
 </div>
 
 <div id="map-area" class="main-container">
-    <h2 style="text-align: center; color: #ffcc00;">我的學習地圖</h2>
-    <div id="quiz-list">正在讀取雲端資料...</div>
-    <button onclick="location.reload()" style="background:none; border:none; color:#555; width:100%; margin-top:30px; cursor:pointer; font-size: 0.8rem;">登出並切換帳號</button>
+    <h2 style="text-align: center; color: #ffcc00; margin-bottom: 5px;">學習進度地圖</h2>
+    <p style="text-align: center; color: #777; font-size: 0.9rem;">完成各階段測驗以解鎖解析</p>
+    <div id="quiz-list" class="quiz-grid"></div>
+    <button onclick="location.reload()" style="background:none; border:none; color:#555; width:100%; margin-top:30px; cursor:pointer; font-size: 0.8rem;">登出 / 切換帳號</button>
 </div>
 
 <div id="overlay" onclick="closeModal()"></div>
 <div id="modal">
-    <h3 style="color:#ffcc00; margin-top:0;">測驗復盤解析</h3>
-    <div id="modal-content" style="margin-bottom: 20px; white-space: pre-wrap; color:#ccc; line-height: 1.5;"></div>
+    <h3 id="modal-title" style="color:#ffcc00; margin-top: 0;"></h3>
+    <div id="modal-content" style="margin: 15px 0; color:#ccc; white-space: pre-wrap; line-height: 1.6;"></div>
     <button class="btn btn-gold" onclick="closeModal()">關閉</button>
 </div>
 
 <script>
-    // 已更新為您提供的最新 GAS 網址
-    const API = "https://script.google.com/macros/s/AKfycbxmQhZ3DUg49wTi1q31vx7kjCiX6KzhqaVKqBL24KeT56vwBDmPbncD4J5dcbOH078VaA/exec";
+    const API = "https://script.google.com/macros/s/AKfycbzsxWC6KEsN1OZgWr2r-lHnBf0LCgksafqdp-1mwDIybaQ-wITDZZ6dHGU3nFw-ziC3zQ/exec";
     let user = "", pass = "";
 
     async function login() {
         user = document.getElementById('uid').value.trim();
         pass = document.getElementById('upw').value.trim();
         const msg = document.getElementById('msg');
-
-        if (!user || pass.length !== 6) {
-            msg.innerText = "請輸入編號及 6 碼密碼";
-            return;
-        }
+        if (!user || pass.length !== 6) return msg.innerText = "請輸入正確編號與 6 碼密碼";
 
         msg.style.color = "#ff9900";
-        msg.innerText = "正在驗證身份...";
+        msg.innerText = "連線驗證中...";
 
         try {
             const res = await fetch(`${API}?action=getQuiz&userId=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`);
             const data = await res.json();
-
             if (data.status === "error") {
                 msg.style.color = "#ff4444";
-                msg.innerText = data.message;
-                return;
+                return msg.innerText = data.message;
             }
 
-            // 登入成功，顯示地圖
             document.getElementById('login-area').style.display = 'none';
             document.getElementById('map-area').style.display = 'block';
-            renderQuizzes(data.quizzes);
-
-        } catch (e) {
-            msg.style.color = "#ff4444";
-            msg.innerText = "連線失敗，請檢查網路或 GAS 部署權限。";
-            console.error(e);
+            render(data.quizzes);
+        } catch (e) { 
+            msg.innerText = "伺服器連線失敗，請檢查網路或網址。";
         }
     }
 
-    function renderQuizzes(quizzes) {
+    function render(quizzes) {
         const list = document.getElementById('quiz-list');
         list.innerHTML = "";
-        
-        if (Object.keys(quizzes).length === 0) {
-            list.innerHTML = "<p style='text-align:center; color:#777;'>目前沒有開放的測驗內容。</p>";
-            return;
-        }
-
-        Object.keys(quizzes).forEach(qId => {
-            const q = quizzes[qId][0];
+        quizzes.forEach(q => {
             const card = document.createElement('div');
             card.className = `quiz-card ${q.isFinished ? 'done' : ''}`;
             card.innerHTML = `
-                <div>
-                    <div style="font-weight:bold; color:#ffcc00; font-size:1.1rem;">${q.title}</div>
-                    <div style="font-size:0.8rem; color:${q.isFinished ? '#00c853' : '#777'}">
-                        ${q.isFinished ? `● 已完成 (得分: ${q.prevScore})` : '○ 尚未開始'}
-                    </div>
-                </div>
-                ${q.isFinished 
-                    ? `<button class="btn btn-review" onclick="showReview('${q.prevDetail.replace(/\n/g, "\\n")}')">查看復盤</button>`
-                    : `<button class="btn btn-gold" style="width:auto; padding:8px 15px;" onclick="startQuiz('${qId}')">開始測驗</button>`}
+                <h3>${q.title}</h3>
+                <div class="score-badge">${q.isFinished ? '得分：' + q.prevScore : '未完成'}</div>
+                <button class="btn ${q.isFinished ? 'btn-done' : 'btn-gold'}" 
+                    onclick="${q.isFinished ? `showReview('${q.title}', '${q.prevDetail.replace(/\n/g, "\\n")}')` : `startQuiz('${q.qId}')`}">
+                    ${q.isFinished ? '查看復盤' : '開始測驗'}
+                </button>
             `;
             list.appendChild(card);
         });
     }
 
     async function startQuiz(qId) {
-        if (!confirm(`確定要開始測驗「${qId}」嗎？每個帳號僅限測驗一次。`)) return;
+        if (!confirm(`確定進入「${qId}」作答流程嗎？每人限測一次。`)) return;
         
-        // 這裡可以換成您真實的測驗流程邏輯
-        const score = Math.floor(Math.random() * 21) + 80; // 模擬分數 80-100
-        const detail = "測驗成功同步！\n解析：Web3 的核心在於用戶對數據的所有權。\n建議：多複習智能合約的安全機制。";
-        
-        const res = await fetch(`${API}?action=submitRecord&userId=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}&qId=${encodeURIComponent(qId)}&score=${score}&detail=${encodeURIComponent(detail)}`);
-        const result = await res.json();
-        
-        if (result.status === "success") {
-            alert("提交成功！紀錄已寫入雲端。");
-            login(); // 重新整理狀態
-        } else {
-            alert("提交失敗：" + result.message);
+        // 這裡可以跳轉到你的真實題目頁面，以下為模擬寫入流程
+        const score = Math.floor(Math.random() * 21) + 80; // 模擬 80-100 分
+        const detail = `${qId} 復盤報告：\n1. 核心觀念掌握度高。\n2. 錯題解析：第3題關於區塊鏈機制的理解需加強。\n3. 建議複習：智能合約安全性章節。`;
+
+        try {
+            const res = await fetch(`${API}?action=submitRecord&userId=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}&qId=${encodeURIComponent(qId)}&score=${score}&detail=${encodeURIComponent(detail)}`);
+            const result = await res.json();
+            if (result.status === "success") {
+                alert(`${qId} 提交成功！`);
+                login(); // 重新整理進度
+            } else {
+                alert("提交失敗：" + result.message);
+            }
+        } catch (e) {
+            alert("提交過程發生錯誤。");
         }
     }
 
-    function showReview(d) {
-        document.getElementById('modal-content').innerText = d;
+    function showReview(title, detail) {
+        document.getElementById('modal-title').innerText = title + " 測驗復盤";
+        document.getElementById('modal-content').innerText = detail;
         document.getElementById('modal').style.display = 'block';
         document.getElementById('overlay').style.display = 'block';
     }
